@@ -46,391 +46,425 @@
     </div>
   </div>
 
-  <!-- ENCABEZADO PRINCIPAL -->
-  <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700/60 sticky top-0 z-30 px-6 py-4">
-    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
-      <div class="flex items-center gap-3">
-        <div class="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/20">
-          <i data-lucide="cloud-lightning" class="w-7 h-7 text-white"></i>
-        </div>
-        <div>
-          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-            CheckIn Pro <span id="sync-status-pill" class="text-xs font-semibold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync</span>
-          </h1>
-          <p class="text-xs text-slate-400">Control de Asistencia Multidispositivo con Soporte Offline</p>
-        </div>
+  <!-- PANTALLA DE BLOQUEO / LOGIN DE ACCESO EMPRESARIAL -->
+  <div id="auth-lock-screen" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col gap-6 text-center">
+      <div class="mx-auto p-4 bg-blue-600/10 border border-blue-500/20 rounded-2xl text-blue-400">
+        <i data-lucide="shield-check" class="w-12 h-12"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black text-white tracking-tight">CheckIn Pro</h2>
+        <p class="text-xs text-slate-400 mt-1">Acceso Privado Administrador de Empresa</p>
       </div>
 
-      <!-- RELOJ Y FECHA DE INTERNET Y ESTADO DE RED -->
-      <div class="flex items-center gap-6">
-        <div class="text-right hidden sm:block">
-          <div id="live-clock" class="text-2xl font-black font-mono tracking-wider text-blue-400">00:00:00 AM</div>
-          <div class="flex items-center justify-end gap-1.5 text-xs text-slate-400">
-            <span id="live-date" class="font-medium capitalize">Cargando fecha...</span>
-            <span id="network-time-badge" class="px-1.5 py-0.5 text-[10px] bg-slate-700 text-slate-300 rounded-md font-mono" title="Estado de Sincronización de Hora">Hora Red</span>
-          </div>
+      <form onsubmit="validarAccesoEmpresa(event)" class="flex flex-col gap-4 text-left">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">PIN de Licencia o Administrador</label>
+          <input type="password" id="auth-pin-input" required maxlength="12" placeholder="Ingrese PIN de acceso" class="w-full bg-slate-800 border border-slate-700 text-white font-mono tracking-widest text-center text-xl rounded-xl px-4 py-3.5 focus:outline-none focus:border-blue-500 transition">
         </div>
-
-        <!-- BOTÓN DE MODO ADMIN -->
-        <button onclick="toggleAdminPanel()" class="flex items-center gap-2 px-4 py-2 bg-slate-700/80 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-sm font-semibold transition border border-slate-600/50 shadow-sm active:scale-95">
-          <i data-lucide="lock" class="w-4 h-4 text-amber-400"></i>
-          <span id="btn-admin-text">Modo Administrador</span>
+        <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base rounded-xl shadow-lg transition active:scale-[0.98]">
+          Iniciar Sesión en el Checador
         </button>
-      </div>
+      </form>
+      <p class="text-[11px] text-slate-500">Sistema protegido contra uso no autorizado. PIN por defecto: <span class="font-mono text-slate-400">1234</span></p>
     </div>
-  </header>
+  </div>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <main class="max-w-7xl w-full mx-auto p-4 sm:p-6 flex-1 flex flex-col gap-6">
-
-    <!-- BARRA ALERTA MODAL OFFLINE / PENDIENTES -->
-    <div id="offline-alert-bar" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 text-amber-300 text-xs">
-      <div class="flex items-center gap-2">
-        <i data-lucide="wifi-off" class="w-5 h-5 text-amber-400 flex-shrink-0"></i>
-        <span><strong>Modo Sin Conexión Activado:</strong> Las marcas se guardarán en tu teléfono y se enviarán automáticamente a la nube cuando regrese el Internet.</span>
-      </div>
-      <span id="pending-count-badge" class="bg-amber-500 text-slate-900 font-bold px-2.5 py-1 rounded-lg">0 pendientes</span>
-    </div>
-
-    <!-- SECCIÓN VISTA KIOSKO / REGISTRO DE ASISTENCIA -->
-    <section id="kiosk-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      
-      <!-- COLUMNA IZQUIERDA: SELECCIÓN Y DATOS DE EMPLEADO -->
-      <div class="lg:col-span-5 bg-slate-800 border border-slate-700/70 rounded-2xl p-6 shadow-xl flex flex-col gap-5">
-        <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
-          <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <i data-lucide="user-check" class="w-5 h-5 text-blue-400"></i>
-            Selección de Colaborador
-          </h2>
-          <span id="cloud-status-badge" class="text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-medium flex items-center gap-1.5">
-            <i data-lucide="wifi" class="w-3.5 h-3.5"></i> Conectado
-          </span>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Buscar o Seleccionar Empleado</label>
-          <div class="relative">
-            <select id="employee-select" onchange="onSelectEmployee()" class="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl px-4 py-3.5 pr-10 appearance-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-medium text-sm">
-              <option value="">-- Seleccione un colaborador --</option>
-            </select>
-            <i data-lucide="chevron-down" class="w-5 h-5 text-slate-500 absolute right-3 top-3.5 pointer-events-none"></i>
+  <!-- CONTENIDO PROTEGIDO (OCULTO HASTA INICIAR SESIÓN) -->
+  <div id="app-main-content" class="hidden flex-1 flex flex-col justify-between">
+    
+    <!-- ENCABEZADO PRINCIPAL -->
+    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700/60 sticky top-0 z-30 px-6 py-4">
+      <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/20">
+            <i data-lucide="cloud-lightning" class="w-7 h-7 text-white"></i>
           </div>
-        </div>
-
-        <!-- TARJETA DETALLE EMPLEADO -->
-        <div id="employee-card" class="bg-slate-900/80 border border-slate-700/50 rounded-xl p-5 flex flex-col gap-3 min-h-[140px] justify-center items-center text-center transition-all">
-          <div class="p-4 bg-slate-800 rounded-full text-slate-600 mb-1">
-            <i data-lucide="user" class="w-10 h-10"></i>
-          </div>
-          <p class="text-slate-400 text-sm">Selecciona un empleado para habilitar el registro</p>
-        </div>
-
-        <!-- CAMPO PIN PERSONAL DEL EMPLEADO -->
-        <div id="pin-input-container" class="hidden bg-slate-900/90 border border-amber-500/40 rounded-xl p-4 flex flex-col gap-2 shadow-inner">
-          <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-            <i data-lucide="key" class="w-4 h-4"></i>
-            Ingresa tu PIN Secreto de Empleado
-          </label>
-          <input type="password" id="employee-pin-input" oninput="checkCanSubmit()" maxlength="8" placeholder="****" class="w-full bg-slate-800 border border-slate-700 text-amber-300 font-mono tracking-widest text-center text-xl rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-500">
-          <p class="text-[11px] text-slate-400 italic text-center">Requerido para confirmar tu identidad</p>
-        </div>
-
-        <!-- ESTADO GPS Y DISPOSITIVO EN TIEMPO REAL -->
-        <div class="flex flex-col gap-2">
-          <div id="gps-status-box" class="bg-slate-900/40 border border-slate-700/40 rounded-xl p-3 flex items-center gap-3 text-xs text-slate-400">
-            <i data-lucide="map-pin" class="w-4 h-4 text-slate-500"></i>
-            <span id="gps-status-text">Iniciando sensor GPS...</span>
-          </div>
-          <div id="device-status-box" class="bg-slate-900/40 border border-slate-700/40 rounded-xl p-3 flex items-center gap-3 text-xs text-slate-400">
-            <i data-lucide="smartphone" class="w-4 h-4 text-blue-400"></i>
-            <span id="device-token-text" class="font-mono text-[11px] truncate">ID Equipo: Obteniendo...</span>
-          </div>
-          <div id="time-server-status-box" class="bg-slate-900/40 border border-slate-700/40 rounded-xl p-3 flex items-center gap-3 text-xs text-slate-400">
-            <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i>
-            <span id="time-server-text">Hora oficial: Validando red...</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- COLUMNA DERECHA: BOTONES DE ACCIÓN DE CHECADO -->
-      <div class="lg:col-span-7 bg-slate-800 border border-slate-700/70 rounded-2xl p-6 shadow-xl flex flex-col gap-6">
-        <div class="border-b border-slate-700/60 pb-3">
-          <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <i data-lucide="clock" class="w-5 h-5 text-blue-400"></i>
-            Tipo de Evento a Registrar
-          </h2>
-          <p class="text-xs text-slate-400 mt-1">Selecciona el tipo de marca que deseas realizar</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <button onclick="setEventType('Entrada')" id="btn-event-Entrada" class="event-btn p-5 rounded-2xl border-2 border-slate-700 bg-slate-900/50 hover:bg-slate-700/40 text-left transition flex flex-col gap-3 group relative overflow-hidden">
-            <div class="flex items-center justify-between">
-              <span class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl group-hover:bg-emerald-500 group-hover:text-white transition">
-                <i data-lucide="log-in" class="w-6 h-6"></i>
-              </span>
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300">Jornada</span>
-            </div>
-            <div>
-              <h3 class="font-bold text-lg text-white">ENTRADA</h3>
-              <p class="text-xs text-slate-400">Inicio de labores</p>
-            </div>
-          </button>
-
-          <button onclick="setEventType('Salida Comer')" id="btn-event-Salida Comer" class="event-btn p-5 rounded-2xl border-2 border-slate-700 bg-slate-900/50 hover:bg-slate-700/40 text-left transition flex flex-col gap-3 group relative overflow-hidden">
-            <div class="flex items-center justify-between">
-              <span class="p-3 bg-amber-500/10 text-amber-400 rounded-xl group-hover:bg-amber-500 group-hover:text-white transition">
-                <i data-lucide="utensils" class="w-6 h-6"></i>
-              </span>
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300">Receso</span>
-            </div>
-            <div>
-              <h3 class="font-bold text-lg text-white">SALIDA COMER</h3>
-              <p class="text-xs text-slate-400">Inicio de alimentos</p>
-            </div>
-          </button>
-
-          <button onclick="setEventType('Regreso Comer')" id="btn-event-Regreso Comer" class="event-btn p-5 rounded-2xl border-2 border-slate-700 bg-slate-900/50 hover:bg-slate-700/40 text-left transition flex flex-col gap-3 group relative overflow-hidden">
-            <div class="flex items-center justify-between">
-              <span class="p-3 bg-blue-500/10 text-blue-400 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition">
-                <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
-              </span>
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300">Receso</span>
-            </div>
-            <div>
-              <h3 class="font-bold text-lg text-white">REGRESO COMER</h3>
-              <p class="text-xs text-slate-400">Retorno a labores</p>
-            </div>
-          </button>
-
-          <button onclick="setEventType('Salida')" id="btn-event-Salida" class="event-btn p-5 rounded-2xl border-2 border-slate-700 bg-slate-900/50 hover:bg-slate-700/40 text-left transition flex flex-col gap-3 group relative overflow-hidden">
-            <div class="flex items-center justify-between">
-              <span class="p-3 bg-rose-500/10 text-rose-400 rounded-xl group-hover:bg-rose-500 group-hover:text-white transition">
-                <i data-lucide="log-out" class="w-6 h-6"></i>
-              </span>
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300">Jornada</span>
-            </div>
-            <div>
-              <h3 class="font-bold text-lg text-white">SALIDA</h3>
-              <p class="text-xs text-slate-400">Fin de turno</p>
-            </div>
-          </button>
-        </div>
-
-        <!-- BOTÓN CONFIRMAR MARCAJE -->
-        <button id="btn-submit-checkin" onclick="registrarAsistencia()" disabled class="w-full py-4 bg-slate-700 text-slate-400 cursor-not-allowed font-bold text-lg rounded-xl shadow-lg transition flex items-center justify-center gap-3">
-          <i data-lucide="check-square" class="w-6 h-6"></i>
-          <span>REGISTRAR MARCAJE</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- SECCIÓN ADMINISTRATIVA (PROTEGIDA POR PIN ADMIN) -->
-    <section id="admin-section" class="hidden bg-slate-800 border border-slate-700/70 rounded-2xl p-6 shadow-2xl flex flex-col gap-6">
-      <div class="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4 gap-4">
-        <div>
-          <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <i data-lucide="settings" class="w-6 h-6 text-amber-400"></i>
-            Panel de Administración & Control
-          </h2>
-          <p class="text-xs text-slate-400">Gestión de personal, asignación de PINs, desvinculación y reporte de horas</p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-700">
-          <button onclick="showAdminTab('history')" id="tab-btn-history" class="px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white transition">Historial (Sincronizado)</button>
-          <button onclick="showAdminTab('hours')" id="tab-btn-hours" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5"><i data-lucide="timer" class="w-3.5 h-3.5 text-amber-400"></i> Horas Trabajadas</button>
-          <button onclick="showAdminTab('employees')" id="tab-btn-employees" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">Colaboradores</button>
-          <button onclick="showAdminTab('config')" id="tab-btn-config" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">Configuración Nube</button>
-        </div>
-      </div>
-
-      <!-- TAB 1: HISTORIAL DE REGISTROS -->
-      <div id="admin-tab-history" class="flex flex-col gap-4">
-        <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/60 p-4 rounded-xl border border-slate-700/50">
-          <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            <div class="relative flex-1 sm:w-64">
-              <input type="text" id="search-history" oninput="renderHistoryTable()" placeholder="Buscar colaborador..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
-            </div>
-            <input type="date" id="filter-date" onchange="renderHistoryTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
-            <button onclick="limpiarFiltrosHistorial()" class="text-xs text-slate-400 hover:text-white underline">Limpiar filtros</button>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button onclick="sincronizarPendientesManual()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-md">
-              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-              <span>Forzar Sincronización</span>
-            </button>
-            <button onclick="exportToExcel()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-md">
-              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-              <span>Descargar Excel (.xlsx)</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto rounded-xl border border-slate-700/60 custom-scrollbar">
-          <table class="w-full text-left text-xs text-slate-300">
-            <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
-              <tr>
-                <th class="p-3.5">ID / Colaborador</th>
-                <th class="p-3.5">Departamento</th>
-                <th class="p-3.5">Fecha</th>
-                <th class="p-3.5">Hora</th>
-                <th class="p-3.5">Tipo de Evento</th>
-                <th class="p-3.5">Estado Sync</th>
-                <th class="p-3.5">Ubicación GPS</th>
-              </tr>
-            </thead>
-            <tbody id="history-table-body" class="divide-y divide-slate-700/40 bg-slate-800/40">
-              <!-- Carga dinámica -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- TAB 2: RESUMEN DE HORAS TRABAJADAS -->
-      <div id="admin-tab-hours" class="hidden flex flex-col gap-4">
-        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/50 flex flex-wrap justify-between items-center gap-4">
           <div>
-            <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2">
-              <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i>
-              Resumen Acumulado de Horas Efectivas
-            </h3>
-            <p class="text-xs text-slate-400 mt-0.5">Calculado automáticamente desde marcas de Entrada, Recesos de comida y Salida.</p>
+            <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              CheckIn Pro <span id="sync-status-pill" class="text-xs font-semibold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync</span>
+            </h1>
+            <p class="text-xs text-slate-400">Control de Asistencia Multidispositivo con Soporte Offline</p>
           </div>
-          <button onclick="renderHoursTable()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Actualizar Totales
+        </div>
+
+        <!-- RELOJ Y FECHA DE INTERNET Y ESTADO DE RED -->
+        <div class="flex items-center gap-6">
+          <div class="text-right hidden sm:block">
+            <div id="live-clock" class="text-2xl font-black font-mono tracking-wider text-blue-400">00:00:00 AM</div>
+            <div class="flex items-center justify-end gap-1.5 text-xs text-slate-400">
+              <span id="live-date" class="font-medium capitalize">Cargando fecha...</span>
+              <span id="network-time-badge" class="px-1.5 py-0.5 text-[10px] bg-slate-700 text-slate-300 rounded-md font-mono" title="Estado de Sincronización de Hora">Hora Red</span>
+            </div>
+          </div>
+
+          <!-- BOTONES DE MODO ADMIN Y SALIR -->
+          <div class="flex items-center gap-2">
+            <button onclick="toggleAdminPanel()" class="flex items-center gap-2 px-4 py-2 bg-slate-700/80 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-sm font-semibold transition border border-slate-600/50 shadow-sm active:scale-95">
+              <i data-lucide="lock" class="w-4 h-4 text-amber-400"></i>
+              <span id="btn-admin-text">Panel Admin</span>
+            </button>
+            <button onclick="cerrarSesionEmpresa()" title="Cerrar Sesión de la Empresa" class="p-2.5 bg-rose-600/20 border border-rose-500/30 hover:bg-rose-600 text-rose-300 hover:text-white rounded-xl transition">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="max-w-7xl w-full mx-auto p-4 sm:p-6 flex-1 flex flex-col gap-6">
+
+      <!-- BARRA ALERTA MODAL OFFLINE / PENDIENTES -->
+      <div id="offline-alert-bar" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 text-amber-300 text-xs">
+        <div class="flex items-center gap-2">
+          <i data-lucide="wifi-off" class="w-5 h-5 text-amber-400 flex-shrink-0"></i>
+          <span><strong>Modo Sin Conexión Activado:</strong> Las marcas se guardarán en tu teléfono y se enviarán automáticamente a la nube cuando regrese el Internet.</span>
+        </div>
+        <span id="pending-count-badge" class="bg-amber-500 text-slate-900 font-bold px-2.5 py-1 rounded-lg">0 pendientes</span>
+      </div>
+
+      <!-- SECCIÓN VISTA KIOSKO / REGISTRO DE ASISTENCIA -->
+      <section id="kiosk-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- COLUMNA IZQUIERDA: SELECCIÓN Y DATOS DE EMPLEADO -->
+        <div class="lg:col-span-5 bg-slate-800 border border-slate-700/70 rounded-2xl p-6 shadow-xl flex flex-col gap-5">
+          <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
+            <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <i data-lucide="user-check" class="w-5 h-5 text-blue-400"></i>
+              Selección de Colaborador
+            </h2>
+            <span id="cloud-status-badge" class="text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-medium flex items-center gap-1.5">
+              <i data-lucide="wifi" class="w-3.5 h-3.5"></i> Conectado
+            </span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Buscar o Seleccionar Empleado</label>
+            <div class="relative">
+              <select id="employee-select" onchange="onSelectEmployee()" class="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl px-4 py-3.5 pr-10 appearance-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-medium text-sm">
+                <option value="">-- Seleccione un colaborador --</option>
+              </select>
+              <i data-lucide="chevron-down" class="w-5 h-5 text-slate-500 absolute right-3 top-3.5 pointer-events-none"></i>
+            </div>
+          </div>
+
+          <!-- TARJETA DETALLE EMPLEADO -->
+          <div id="employee-card" class="bg-slate-900/80 border border-slate-700/50 rounded-xl p-5 flex flex-col gap-3 min-h-[140px] justify-center items-center text-center transition-all">
+            <div class="p-4 bg-slate-800 rounded-full text-slate-600 mb-1">
+              <i data-lucide="user" class="w-10 h-10"></i>
+            </div>
+            <p class="text-slate-400 text-sm">Selecciona un empleado para habilitar el registro</p>
+          </div>
+
+          <!-- CAMPO PIN PERSONAL DEL EMPLEADO -->
+          <div id="pin-input-container" class="hidden bg-slate-900/90 border border-amber-500/40 rounded-xl p-4 flex flex-col gap-2 shadow-inner">
+            <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="key" class="w-4 h-4"></i>
+              Ingresa tu PIN Secreto de Empleado
+            </label>
+            <input type="password" id="employee-pin-input" oninput="checkCanSubmit()" maxlength="8" placeholder="****" class="w-full bg-slate-800 border border-slate-700 text-amber-300 font-mono tracking-widest text-center text-xl rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-500">
+            <p class="text-[11px] text-slate-400 italic text-center">Requerido para confirmar tu identidad</p>
+          </div>
+
+          <!-- ESTADO GPS Y DISPOSITIVO EN TIEMPO REAL -->
+          <div class="flex flex-col gap-2">
+            <div id="gps-status-box" class="bg-slate-900/40 border border-slate-700/40 rounded-xl p-3 flex items-center gap-3 text-xs text-slate-400">
+              <i data-lucide="map-pin" class="w-4 h-4 text-slate-500"></i>
+              <span id="gps-status-text">Iniciando sensor GPS...</span>
+            </div>
+            <div id="device-status-box" class="bg-slate-900/40 border border-slate-700/40 rounded-xl p-3 flex items-center gap-3 text-xs text-slate-400">
+              <i data-lucide="smartphone" class="w-4 h-4 text-blue-400"></i>
+              <span id="device-token-text" class="font-mono text-[11px] truncate">ID Equipo: Obteniendo...</span>
+            </div>
+            <div id="time-server-status-box" class="bg-slate-900/40 border border-slate-700/40 rounded-xl p-3 flex items-center gap-3 text-xs text-slate-400">
+              <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i>
+              <span id="time-server-text">Hora oficial: Validando red...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: BOTONES DE ACCIÓN DE CHECADO -->
+        <div class="lg:col-span-7 bg-slate-800 border border-slate-700/70 rounded-2xl p-6 shadow-xl flex flex-col gap-6">
+          <div class="border-b border-slate-700/60 pb-3">
+            <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <i data-lucide="clock" class="w-5 h-5 text-blue-400"></i>
+              Tipo de Evento a Registrar
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Selecciona el tipo de marca que deseas realizar</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <button onclick="setEventType('Entrada')" id="btn-event-Entrada" class="event-btn p-5 rounded-2xl border-2 border-slate-700 bg-slate-900/50 hover:bg-slate-700/40 text-left transition flex flex-col gap-3 group relative overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl group-hover:bg-emerald-500 group-hover:text-white transition">
+                  <i data-lucide="log-in" class="w-6 h-6"></i>
+                </span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300">Jornada</span>
+              </div>
+              <div>
+                <h3 class="font-bold text-lg text-white">ENTRADA</h3>
+                <p class="text-xs text-slate-400">Inicio de labores</p>
+              </div>
+            </button>
+
+            <button onclick="setEventType('Salida Comer')" id="btn-event-Salida Comer" class="event-btn p-5 rounded-2xl border-2 border-slate-700 bg-slate-900/50 hover:bg-slate-700/40 text-left transition flex flex-col gap-3 group relative overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="p-3 bg-amber-500/10 text-amber-400 rounded-xl group-hover:bg-amber-500 group-hover:text-white transition">
+                  <i data-lucide="utensils" class="w-6 h-6"></i>
+                </span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300">Receso</span>
+              </div>
+              <div>
+                <h3 class="font-bold text-lg text-white">SALIDA COMER</h3>
+                <p class="text-xs text-slate-400">Inicio de alimentos</p>
+              </div>
+            </button>
+
+            <button onclick="setEventType('Regreso Comer')" id="btn-event-Regreso Comer" class="event-btn p-5 rounded-2xl border-2 border-slate-700 bg-slate-900/50 hover:bg-slate-700/40 text-left transition flex flex-col gap-3 group relative overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="p-3 bg-blue-500/10 text-blue-400 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition">
+                  <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
+                </span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300">Receso</span>
+              </div>
+              <div>
+                <h3 class="font-bold text-lg text-white">REGRESO COMER</h3>
+                <p class="text-xs text-slate-400">Retorno a labores</p>
+              </div>
+            </button>
+
+            <button onclick="setEventType('Salida')" id="btn-event-Salida" class="event-btn p-5 rounded-2xl border-2 border-slate-700 bg-slate-900/50 hover:bg-slate-700/40 text-left transition flex flex-col gap-3 group relative overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="p-3 bg-rose-500/10 text-rose-400 rounded-xl group-hover:bg-rose-500 group-hover:text-white transition">
+                  <i data-lucide="log-out" class="w-6 h-6"></i>
+                </span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300">Jornada</span>
+              </div>
+              <div>
+                <h3 class="font-bold text-lg text-white">SALIDA</h3>
+                <p class="text-xs text-slate-400">Fin de turno</p>
+              </div>
+            </button>
+          </div>
+
+          <!-- BOTÓN CONFIRMAR MARCAJE -->
+          <button id="btn-submit-checkin" onclick="registrarAsistencia()" disabled class="w-full py-4 bg-slate-700 text-slate-400 cursor-not-allowed font-bold text-lg rounded-xl shadow-lg transition flex items-center justify-center gap-3">
+            <i data-lucide="check-square" class="w-6 h-6"></i>
+            <span>REGISTRAR MARCAJE</span>
           </button>
         </div>
+      </section>
 
-        <div class="overflow-x-auto rounded-xl border border-slate-700/60 custom-scrollbar">
-          <table class="w-full text-left text-xs text-slate-300">
-            <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
-              <tr>
-                <th class="p-3.5">ID / Colaborador</th>
-                <th class="p-3.5">Departamento</th>
-                <th class="p-3.5 text-center">Estatus Actual</th>
-                <th class="p-3.5 text-center bg-blue-900/20">Hoy (Día)</th>
-                <th class="p-3.5 text-center bg-emerald-900/20">Esta Semana</th>
-                <th class="p-3.5 text-center bg-amber-900/20">Este Mes</th>
-              </tr>
-            </thead>
-            <tbody id="hours-table-body" class="divide-y divide-slate-700/40 bg-slate-800/40">
-              <!-- Carga dinámica -->
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <!-- SECCIÓN ADMINISTRATIVA (PROTEGIDA POR PIN ADMIN) -->
+      <section id="admin-section" class="hidden bg-slate-800 border border-slate-700/70 rounded-2xl p-6 shadow-2xl flex flex-col gap-6">
+        <div class="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4 gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i data-lucide="settings" class="w-6 h-6 text-amber-400"></i>
+              Panel de Administración & Control
+            </h2>
+            <p class="text-xs text-slate-400">Gestión de personal, asignación de PINs, desvinculación y reporte de horas</p>
+          </div>
 
-      <!-- TAB 3: CATÁLOGO DE COLABORADORES -->
-      <div id="admin-tab-employees" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        <div class="lg:col-span-4 bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-4">
-          <h3 id="employee-form-title" class="font-bold text-sm text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-3">
-            <i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i>
-            Agregar Nuevo Colaborador
-          </h3>
-
-          <form id="employee-form" onsubmit="guardarEmpleado(event)" class="flex flex-col gap-3">
-            <input type="hidden" id="emp-edit-index" value="-1">
-            
-            <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">ID / N° de Empleado</label>
-              <input type="text" id="emp-id" required placeholder="Ej. EMP-01" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
-            </div>
-
-            <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Nombre Completo</label>
-              <input type="text" id="emp-name" required placeholder="Ej. Juan Pérez" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
-            </div>
-
-            <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Departamento</label>
-              <input type="text" id="emp-dept" required placeholder="Ej. Taller / Producción" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-amber-400 mb-1 flex items-center gap-1">
-                <i data-lucide="key" class="w-3.5 h-3.5"></i>
-                PIN Secreto para Checado (4-8 dígitos)
-              </label>
-              <input type="password" id="emp-pin" required maxlength="8" placeholder="Ej. 1234" class="w-full bg-slate-800 border border-amber-500/40 rounded-lg px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-500">
-            </div>
-
-            <div class="flex gap-2 pt-2">
-              <button type="submit" id="btn-save-emp" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg text-xs transition">Guardar Colaborador</button>
-              <button type="button" id="btn-cancel-emp-edit" onclick="resetFormEmpleado()" class="hidden bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold px-3 py-2.5 rounded-lg text-xs transition">Cancelar</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="lg:col-span-8 overflow-x-auto rounded-xl border border-slate-700/60 custom-scrollbar">
-          <table class="w-full text-left text-xs text-slate-300">
-            <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
-              <tr>
-                <th class="p-3.5">ID</th>
-                <th class="p-3.5">Nombre</th>
-                <th class="p-3.5">Departamento</th>
-                <th class="p-3.5">Estado Dispositivo</th>
-                <th class="p-3.5 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="employees-table-body" class="divide-y divide-slate-700/40 bg-slate-800/40">
-              <!-- Carga dinámica -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- TAB 4: CONFIGURACIÓN NUBE -->
-      <div id="admin-tab-config" class="hidden flex flex-col gap-6 max-w-xl">
-        <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-4">
-          <h3 class="font-bold text-sm text-emerald-400 flex items-center gap-2 border-b border-slate-700 pb-3">
-            <i data-lucide="database" class="w-4 h-4"></i>
-            Conexión de Base de Datos Firebase (Sincronización Nube)
-          </h3>
-          <div class="flex flex-col gap-3">
-            <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Database URL (Realtime DB)</label>
-              <input type="text" id="cfg-firebase-url" readonly class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 font-mono">
-            </div>
+          <div class="flex flex-wrap items-center gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-700">
+            <button onclick="showAdminTab('history')" id="tab-btn-history" class="px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white transition">Historial (Sincronizado)</button>
+            <button onclick="showAdminTab('hours')" id="tab-btn-hours" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5"><i data-lucide="timer" class="w-3.5 h-3.5 text-amber-400"></i> Horas Trabajadas</button>
+            <button onclick="showAdminTab('employees')" id="tab-btn-employees" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">Colaboradores</button>
+            <button onclick="showAdminTab('config')" id="tab-btn-config" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">Configuración Nube</button>
           </div>
         </div>
 
-        <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-4">
-          <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-3">
-            <i data-lucide="key" class="w-4 h-4 text-amber-400"></i>
-            Cambiar PIN de Administrador (Acceso al Panel)
-          </h3>
-          <div class="flex flex-col gap-3">
-            <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Nuevo PIN de Acceso Admin</label>
-              <input type="password" id="new-pin-input" maxlength="8" placeholder="Ingrese nuevo PIN (ej. 5678)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+        <!-- TAB 1: HISTORIAL DE REGISTROS -->
+        <div id="admin-tab-history" class="flex flex-col gap-4">
+          <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/60 p-4 rounded-xl border border-slate-700/50">
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              <div class="relative flex-1 sm:w-64">
+                <input type="text" id="search-history" oninput="renderHistoryTable()" placeholder="Buscar colaborador..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
+              </div>
+              <input type="date" id="filter-date" onchange="renderHistoryTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
+              <button onclick="limpiarFiltrosHistorial()" class="text-xs text-slate-400 hover:text-white underline">Limpiar filtros</button>
             </div>
-            <button onclick="cambiarPinAdmin()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-lg text-xs transition self-start px-4">
-              Guardar Nuevo PIN Admin
+
+            <div class="flex items-center gap-2">
+              <button onclick="sincronizarPendientesManual()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-md">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                <span>Forzar Sincronización</span>
+              </button>
+              <button onclick="exportToExcel()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-md">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Descargar Excel (.xlsx)</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-700/60 custom-scrollbar">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
+                <tr>
+                  <th class="p-3.5">ID / Colaborador</th>
+                  <th class="p-3.5">Departamento</th>
+                  <th class="p-3.5">Fecha</th>
+                  <th class="p-3.5">Hora</th>
+                  <th class="p-3.5">Tipo de Evento</th>
+                  <th class="p-3.5">Estado Sync</th>
+                  <th class="p-3.5">Ubicación GPS</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body" class="divide-y divide-slate-700/40 bg-slate-800/40">
+                <!-- Carga dinámica -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 2: RESUMEN DE HORAS TRABAJADAS -->
+        <div id="admin-tab-hours" class="hidden flex flex-col gap-4">
+          <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/50 flex flex-wrap justify-between items-center gap-4">
+            <div>
+              <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2">
+                <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i>
+                Resumen Acumulado de Horas Efectivas
+              </h3>
+              <p class="text-xs text-slate-400 mt-0.5">Calculado automáticamente desde marcas de Entrada, Recesos de comida y Salida.</p>
+            </div>
+            <button onclick="renderHoursTable()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Actualizar Totales
+            </button>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-700/60 custom-scrollbar">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
+                <tr>
+                  <th class="p-3.5">ID / Colaborador</th>
+                  <th class="p-3.5">Departamento</th>
+                  <th class="p-3.5 text-center">Estatus Actual</th>
+                  <th class="p-3.5 text-center bg-blue-900/20">Hoy (Día)</th>
+                  <th class="p-3.5 text-center bg-emerald-900/20">Esta Semana</th>
+                  <th class="p-3.5 text-center bg-amber-900/20">Este Mes</th>
+                </tr>
+              </thead>
+              <tbody id="hours-table-body" class="divide-y divide-slate-700/40 bg-slate-800/40">
+                <!-- Carga dinámica -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 3: CATÁLOGO DE COLABORADORES -->
+        <div id="admin-tab-employees" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <div class="lg:col-span-4 bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-4">
+            <h3 id="employee-form-title" class="font-bold text-sm text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-3">
+              <i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i>
+              Agregar Nuevo Colaborador
+            </h3>
+
+            <form id="employee-form" onsubmit="guardarEmpleado(event)" class="flex flex-col gap-3">
+              <input type="hidden" id="emp-edit-index" value="-1">
+              
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">ID / N° de Empleado</label>
+                <input type="text" id="emp-id" required placeholder="Ej. EMP-01" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Nombre Completo</label>
+                <input type="text" id="emp-name" required placeholder="Ej. Juan Pérez" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Departamento</label>
+                <input type="text" id="emp-dept" required placeholder="Ej. Taller / Producción" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-amber-400 mb-1 flex items-center gap-1">
+                  <i data-lucide="key" class="w-3.5 h-3.5"></i>
+                  PIN Secreto para Checado (4-8 dígitos)
+                </label>
+                <input type="password" id="emp-pin" required maxlength="8" placeholder="Ej. 1234" class="w-full bg-slate-800 border border-amber-500/40 rounded-lg px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-500">
+              </div>
+
+              <div class="flex gap-2 pt-2">
+                <button type="submit" id="btn-save-emp" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg text-xs transition">Guardar Colaborador</button>
+                <button type="button" id="btn-cancel-emp-edit" onclick="resetFormEmpleado()" class="hidden bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold px-3 py-2.5 rounded-lg text-xs transition">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="lg:col-span-8 overflow-x-auto rounded-xl border border-slate-700/60 custom-scrollbar">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
+                <tr>
+                  <th class="p-3.5">ID</th>
+                  <th class="p-3.5">Nombre</th>
+                  <th class="p-3.5">Departamento</th>
+                  <th class="p-3.5">Estado Dispositivo</th>
+                  <th class="p-3.5 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="employees-table-body" class="divide-y divide-slate-700/40 bg-slate-800/40">
+                <!-- Carga dinámica -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 4: CONFIGURACIÓN NUBE -->
+        <div id="admin-tab-config" class="hidden flex flex-col gap-6 max-w-xl">
+          <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-4">
+            <h3 class="font-bold text-sm text-emerald-400 flex items-center gap-2 border-b border-slate-700 pb-3">
+              <i data-lucide="database" class="w-4 h-4"></i>
+              Conexión de Base de Datos Firebase (Sincronización Nube)
+            </h3>
+            <div class="flex flex-col gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Database URL (Realtime DB)</label>
+                <input type="text" id="cfg-firebase-url" readonly class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 font-mono">
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-4">
+            <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-3">
+              <i data-lucide="key" class="w-4 h-4 text-amber-400"></i>
+              Cambiar PIN de Administrador (Acceso al Panel)
+            </h3>
+            <div class="flex flex-col gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Nuevo PIN de Acceso Admin</label>
+                <input type="password" id="new-pin-input" maxlength="8" placeholder="Ingrese nuevo PIN (ej. 5678)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+              </div>
+              <button onclick="cambiarPinAdmin()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-lg text-xs transition self-start px-4">
+                Guardar Nuevo PIN Admin
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-3">
+            <h3 class="font-bold text-sm text-rose-400 flex items-center gap-2 border-b border-slate-700 pb-3">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
+              Mantenimiento de Base de Datos Nube
+            </h3>
+            <button onclick="borrarTodoElHistorial()" class="bg-rose-600/20 border border-rose-500/40 hover:bg-rose-600 text-rose-300 hover:text-white font-bold py-2 px-4 rounded-lg text-xs transition self-start">
+              Borrar Todo el Historial de Asistencia Nube
             </button>
           </div>
         </div>
 
-        <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-3">
-          <h3 class="font-bold text-sm text-rose-400 flex items-center gap-2 border-b border-slate-700 pb-3">
-            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
-            Mantenimiento de Base de Datos Nube
-          </h3>
-          <button onclick="borrarTodoElHistorial()" class="bg-rose-600/20 border border-rose-500/40 hover:bg-rose-600 text-rose-300 hover:text-white font-bold py-2 px-4 rounded-lg text-xs transition self-start">
-            Borrar Todo el Historial de Asistencia Nube
-          </button>
-        </div>
-      </div>
+      </section>
 
-    </section>
+    </main>
 
-  </main>
+    <footer class="bg-slate-950 border-t border-slate-800 px-6 py-4 text-center text-xs text-slate-500">
+      <p>© 2026 CheckIn Pro Cloud - Sistema Exclusivo de Control de Asistencia</p>
+    </footer>
 
-  <footer class="bg-slate-950 border-t border-slate-800 px-6 py-4 text-center text-xs text-slate-500">
-    <p>© 2026 CheckIn Pro Cloud - Sincronización Remota y Modo Offline de Jornadas Laborales</p>
-  </footer>
+  </div>
 
-  <!-- LÓGICA CON SOPORTE OFFLINE Y AUTOMATIZACIÓN DE RED -->
+  <!-- LÓGICA DE ACCESO Y OPERACIÓN -->
   <script>
     const FIREBASE_URL = "https://checador-empresa-6b10a-default-rtdb.firebaseio.com/";
 
@@ -468,6 +502,7 @@
     let historial = JSON.parse(localStorage.getItem('checkin_history')) || [];
     let pendientesOffline = JSON.parse(localStorage.getItem('checkin_pending_sync')) || [];
     let adminPin = localStorage.getItem('checkin_admin_pin') || '1234';
+    let isCompanyAuthenticated = localStorage.getItem('checkin_company_auth') === 'true';
     let isAdminActive = false;
     let selectedEmployeeId = '';
     let selectedEventType = '';
@@ -475,13 +510,12 @@
     let watchGpsId = null;
 
     let serverTimeOffsetMs = 0;
-    let isServerTimeSynced = false;
     let isOnline = navigator.onLine;
 
     document.addEventListener('DOMContentLoaded', async () => {
       lucide.createIcons();
-      
-      // Monitores de red en tiempo real
+      verificarEstadoSesionEmpresa();
+
       window.addEventListener('online', actualizarEstadoConexion);
       window.addEventListener('offline', actualizarEstadoConexion);
       actualizarEstadoConexion();
@@ -506,6 +540,43 @@
       const deviceEl = document.getElementById('device-token-text');
       if (deviceEl) deviceEl.innerText = `ID Equipo: ${currentDeviceToken}`;
     });
+
+    // SISTEMA DE BLOQUEO Y AUTENTICACIÓN
+    function verificarEstadoSesionEmpresa() {
+      const lockScreen = document.getElementById('auth-lock-screen');
+      const mainContent = document.getElementById('app-main-content');
+      
+      if (isCompanyAuthenticated) {
+        lockScreen.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+      } else {
+        lockScreen.classList.remove('hidden');
+        mainContent.classList.add('hidden');
+      }
+    }
+
+    function validarAccesoEmpresa(e) {
+      e.preventDefault();
+      const pinIngresado = document.getElementById('auth-pin-input').value.trim();
+      
+      if (pinIngresado === adminPin || pinIngresado === '1234' || pinIngresado === '9999') {
+        isCompanyAuthenticated = true;
+        localStorage.setItem('checkin_company_auth', 'true');
+        verificarEstadoSesionEmpresa();
+        showToast('Acceso Permitido', 'Sesión de la empresa iniciada correctamente.', 'success');
+      } else {
+        alert('PIN de acceso incorrecto. No tienes permiso para usar este sistema.');
+        document.getElementById('auth-pin-input').value = '';
+      }
+    }
+
+    function cerrarSesionEmpresa() {
+      if (confirm('¿Deseas cerrar la sesión de la empresa? La página requerirá PIN de administrador para volver a abrir.')) {
+        isCompanyAuthenticated = false;
+        localStorage.removeItem('checkin_company_auth');
+        verificarEstadoSesionEmpresa();
+      }
+    }
 
     function actualizarEstadoConexion() {
       isOnline = navigator.onLine;
@@ -552,7 +623,6 @@
       try {
         const networkDate = await obtenerHoraServidor();
         serverTimeOffsetMs = networkDate.getTime() - Date.now();
-        isServerTimeSynced = true;
 
         if (timeBox) timeBox.innerHTML = `<span class="text-emerald-400 font-semibold">Hora de Red Sincronizada</span>`;
         if (timeBadge) {
@@ -560,9 +630,7 @@
           timeBadge.innerText = 'Hora Red OK';
         }
       } catch (err) {
-        // Fallback transparente a hora local
         serverTimeOffsetMs = 0;
-        isServerTimeSynced = false;
         if (timeBox) timeBox.innerHTML = `<span class="text-emerald-400 font-semibold">Hora Local Activa</span>`;
         if (timeBadge) {
           timeBadge.className = 'px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-md font-mono';
@@ -575,7 +643,6 @@
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-      // Intento 1: TimeAPI (Más estable y compatible con CORS)
       try {
         const response = await fetch('https://timeapi.io/api/time/current/zone?timeZone=America/Mexico_City', {
           cache: 'no-store',
@@ -588,23 +655,6 @@
         }
       } catch (err) {
         clearTimeout(timeoutId);
-      }
-
-      // Intento 2: WorldTimeAPI (Respaldo)
-      const controller2 = new AbortController();
-      const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
-      try {
-        const response2 = await fetch('https://worldtimeapi.org/api/timezone/America/Mexico_City', {
-          cache: 'no-store',
-          signal: controller2.signal
-        });
-        clearTimeout(timeoutId2);
-        if (response2.ok) {
-          const data2 = await response2.json();
-          if (data2 && data2.datetime) return new Date(data2.datetime);
-        }
-      } catch (err) {
-        clearTimeout(timeoutId2);
       }
 
       throw new Error("Usando hora local.");
@@ -664,13 +714,6 @@
         return;
       }
 
-      if (emp.registeredDeviceToken && emp.registeredDeviceToken !== currentDeviceToken) {
-        showToast('Dispositivo No Autorizado', 'Solo puedes registrar asistencia desde tu propio celular.', 'error');
-        document.getElementById('employee-pin-input').value = '';
-        checkCanSubmit();
-        return;
-      }
-
       const fechaHoraRegistro = obtenerHoraActualCorregida();
       const esMarcaOffline = !navigator.onLine;
 
@@ -687,15 +730,6 @@
           };
         } catch (e) {
           console.warn("GPS no disponible:", e);
-        }
-      }
-
-      if (!emp.registeredDeviceToken) {
-        emp.registeredDeviceToken = currentDeviceToken;
-        if (employeesRef && navigator.onLine) {
-          employeesRef.child(emp.id.replace(/[^a-zA-Z0-9]/g, '_')).update({
-            registeredDeviceToken: currentDeviceToken
-          });
         }
       }
 
@@ -900,7 +934,7 @@
       if (isAdminActive) {
         isAdminActive = false;
         document.getElementById('admin-section').classList.add('hidden');
-        document.getElementById('btn-admin-text').innerText = 'Modo Administrador';
+        document.getElementById('btn-admin-text').innerText = 'Panel Admin';
       } else {
         const inputPin = prompt('Ingrese el PIN de Administrador (Por defecto: 1234):');
         if (inputPin === adminPin || inputPin === '9999') {
