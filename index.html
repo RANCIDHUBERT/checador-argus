@@ -67,7 +67,7 @@
           <div id="live-clock" class="text-2xl font-black font-mono tracking-wider text-blue-400">00:00:00 AM</div>
           <div class="flex items-center justify-end gap-1.5 text-xs text-slate-400">
             <span id="live-date" class="font-medium capitalize">Cargando fecha...</span>
-            <span id="network-time-badge" class="px-1.5 py-0.5 text-[10px] bg-slate-700 text-slate-300 rounded-md font-mono" title="Estado de Sincronización de Hora">NTP Net</span>
+            <span id="network-time-badge" class="px-1.5 py-0.5 text-[10px] bg-slate-700 text-slate-300 rounded-md font-mono" title="Estado de Sincronización de Hora">Hora Red</span>
           </div>
         </div>
 
@@ -524,7 +524,6 @@
           syncPill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync`;
         }
         
-        // Al detectar señal de Internet, vaciar la cola de pendientes
         if (pendientesOffline.length > 0) {
           sincronizarPendientesNube();
         } else if (alertBar) {
@@ -550,16 +549,6 @@
       const timeBox = document.getElementById('time-server-text');
       const timeBadge = document.getElementById('network-time-badge');
       
-      if (!navigator.onLine) {
-        isServerTimeSynced = false;
-        if (timeBox) timeBox.innerHTML = `<span class="text-amber-400 font-semibold">Hora local de celular (Sin Red)</span>`;
-        if (timeBadge) {
-          timeBadge.className = 'px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md font-mono';
-          timeBadge.innerText = 'Reloj Local';
-        }
-        return;
-      }
-
       try {
         const networkDate = await obtenerHoraServidor();
         serverTimeOffsetMs = networkDate.getTime() - Date.now();
@@ -568,37 +557,57 @@
         if (timeBox) timeBox.innerHTML = `<span class="text-emerald-400 font-semibold">Hora de Red Sincronizada</span>`;
         if (timeBadge) {
           timeBadge.className = 'px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-md font-mono';
-          timeBadge.innerText = 'NTP OK';
+          timeBadge.innerText = 'Hora Red OK';
         }
       } catch (err) {
+        // Fallback transparente a hora local
+        serverTimeOffsetMs = 0;
         isServerTimeSynced = false;
-        if (timeBox) timeBox.innerHTML = `<span class="text-rose-400 font-semibold">⚠️ Hora local (Error NTP)</span>`;
+        if (timeBox) timeBox.innerHTML = `<span class="text-emerald-400 font-semibold">Hora Local Activa</span>`;
         if (timeBadge) {
-          timeBadge.className = 'px-1.5 py-0.5 text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-md font-mono';
-          timeBadge.innerText = 'NTP Error';
+          timeBadge.className = 'px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-md font-mono';
+          timeBadge.innerText = 'Hora Local';
         }
       }
     }
 
     async function obtenerHoraServidor() {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
 
+      // Intento 1: TimeAPI (Más estable y compatible con CORS)
       try {
-        const response = await fetch('https://worldtimeapi.org/api/timezone/America/Mexico_City', {
+        const response = await fetch('https://timeapi.io/api/time/current/zone?timeZone=America/Mexico_City', {
           cache: 'no-store',
           signal: controller.signal
         });
         clearTimeout(timeoutId);
         if (response.ok) {
           const data = await response.json();
-          if (data && data.datetime) return new Date(data.datetime);
+          if (data && data.dateTime) return new Date(data.dateTime);
         }
       } catch (err) {
         clearTimeout(timeoutId);
       }
 
-      throw new Error("No hay conexión con el servidor NTP.");
+      // Intento 2: WorldTimeAPI (Respaldo)
+      const controller2 = new AbortController();
+      const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
+      try {
+        const response2 = await fetch('https://worldtimeapi.org/api/timezone/America/Mexico_City', {
+          cache: 'no-store',
+          signal: controller2.signal
+        });
+        clearTimeout(timeoutId2);
+        if (response2.ok) {
+          const data2 = await response2.json();
+          if (data2 && data2.datetime) return new Date(data2.datetime);
+        }
+      } catch (err) {
+        clearTimeout(timeoutId2);
+      }
+
+      throw new Error("Usando hora local.");
     }
 
     function obtenerHoraActualCorregida() {
@@ -612,8 +621,6 @@
         const val = snapshot.val();
         if (val) {
           const remoteRecords = Object.values(val);
-          
-          // Mezclar registros remotos con pendientes offline no sincronizados
           const idsRemote = new Set(remoteRecords.map(r => r.id));
           const unSyncedLocal = pendientesOffline.filter(p => !idsRemote.has(p.id));
 
@@ -636,9 +643,6 @@
       });
     }
 
-    // =====================================================================
-    // REGISTRO DE ASISTENCIA CON MODO OFFLINE AUTOMÁTICO
-    // =====================================================================
     async function registrarAsistencia() {
       if (!selectedEmployeeId || !selectedEventType) return;
 
@@ -667,32 +671,9 @@
         return;
       }
 
-      const huellaOk = await validarHuellaColaborador(emp);
-      if (!huellaOk) {
-        document.getElementById('employee-pin-input').value = '';
-        checkCanSubmit();
-        return;
-      }
+      const fechaHoraRegistro = obtenerHoraActualCorregida();
+      const esMarcaOffline = !navigator.onLine;
 
-      // DETERMINAR LA FECHA Y HORA (CON INTERNET O MODO OFFLINE)
-      let fechaHoraRegistro;
-      let esMarcaOffline = false;
-
-      if (navigator.onLine) {
-        try {
-          fechaHoraRegistro = await obtenerHoraServidor();
-          serverTimeOffsetMs = fechaHoraRegistro.getTime() - Date.now();
-          isServerTimeSynced = true;
-        } catch (e) {
-          fechaHoraRegistro = new Date();
-          esMarcaOffline = true;
-        }
-      } else {
-        fechaHoraRegistro = new Date();
-        esMarcaOffline = true;
-      }
-
-      // CAPTURA DE UBICACIÓN GPS
       if (!currentLocation && navigator.geolocation) {
         try {
           const pos = await new Promise((res, rej) => {
@@ -734,17 +715,15 @@
         huellaVerificada: true,
         timestamp: recordId,
         isOfflineRecord: esMarcaOffline,
-        syncStatus: (navigator.onLine && !esMarcaOffline) ? 'Sincronizado' : 'Pendiente'
+        syncStatus: navigator.onLine ? 'Sincronizado' : 'Pendiente'
       };
 
-      // Guardar localmente
       historial.unshift(record);
       localStorage.setItem('checkin_history', JSON.stringify(historial));
 
-      if (navigator.onLine && !esMarcaOffline && historyRef) {
+      if (navigator.onLine && historyRef) {
         historyRef.child(recordKey).set(record);
       } else {
-        // Enviar a cola de almacenamiento sin red
         pendientesOffline.push(record);
         localStorage.setItem('checkin_pending_sync', JSON.stringify(pendientesOffline));
         actualizarEstadoConexion();
@@ -770,7 +749,6 @@
       checkCanSubmit();
     }
 
-    // SINCRONIZADOR AUTOMÁTICO DE PENDIENTES OFFLINE
     async function sincronizarPendientesNube() {
       if (!navigator.onLine || pendientesOffline.length === 0 || !historyRef) return;
 
@@ -784,7 +762,6 @@
           const key = `rec_${rec.id}`;
           await historyRef.child(key).set(rec);
 
-          // Actualizar estado en historial local
           const indexLocal = historial.findIndex(h => h.id === rec.id);
           if (indexLocal >= 0) {
             historial[indexLocal].syncStatus = 'Sincronizado';
@@ -815,7 +792,6 @@
       sincronizarPendientesNube();
     }
 
-    // TABLA DE HISTORIAL CON INSIGNIA DE ESTADO SYNC
     function renderHistoryTable() {
       const tbody = document.getElementById('history-table-body');
       const search = (document.getElementById('search-history')?.value || '').toLowerCase();
@@ -873,7 +849,6 @@
       lucide.createIcons();
     }
 
-    // FUNCIONES RESTANTES DE INTERFAZ Y HUELLA
     function playSuccessSound() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1012,10 +987,6 @@
         btn.disabled = true;
         btn.className = 'w-full py-4 bg-slate-700 text-slate-400 cursor-not-allowed font-bold text-lg rounded-xl shadow-lg transition flex items-center justify-center gap-3';
       }
-    }
-
-    async function validarHuellaColaborador(emp) {
-      return true; // Pases WebAuthn / Huella estándar
     }
 
     function renderHoursTable() {
