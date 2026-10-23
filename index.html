@@ -436,7 +436,7 @@
             <i data-lucide="building-2" class="w-4 h-4 text-blue-400"></i>
             Acceso Privado de Empresa (Clave de Inicio de App)
           </h3>
-          <p class="text-xs text-slate-400">Esta clave es requerida al abrir la aplicación para evitar que personal ajeno o de otra empresa ingrese a tu sistema.</p>
+          <p class="text-xs text-slate-400">Esta clave se sincroniza en tiempo real en todos los dispositivos para evitar accesos no autorizados.</p>
           <div class="flex flex-col gap-3">
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Nombre de la Empresa / Sucursal</label>
@@ -447,7 +447,7 @@
               <input type="password" id="admin-company-pass-input" placeholder="Ingrese nueva clave de la empresa" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-blue-500">
             </div>
             <button onclick="guardarConfiguracionEmpresa()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-xs transition self-start px-4">
-              Guardar Credenciales de Empresa
+              Guardar Credenciales de Empresa (Sincronizar Nube)
             </button>
           </div>
         </div>
@@ -512,6 +512,7 @@
     let db = null;
     let historyRef = null;
     let employeesRef = null;
+    let companyConfigRef = null;
 
     try {
       if (!firebase.apps.length) {
@@ -520,6 +521,7 @@
       db = firebase.database();
       historyRef = db.ref('historial');
       employeesRef = db.ref('empleados');
+      companyConfigRef = db.ref('empresa_config');
     } catch (err) {
       console.warn("Firebase Init fallback:", err);
     }
@@ -594,7 +596,7 @@
 
       if (headerComp) headerComp.innerText = companyName;
       if (loginCompInput) loginCompInput.value = companyName;
-      if (adminCompInput) adminCompInput.value = companyName;
+      if (adminCompInput && document.activeElement !== adminCompInput) adminCompInput.value = companyName;
     }
 
     function verificarEstadoLoginEmpresa() {
@@ -632,7 +634,7 @@
         document.getElementById('btn-admin-text').innerText = 'Modo Administrador';
       }
       verificarEstadoLoginEmpresa();
-      showToast('Sesión Cerrada', 'Se ha bloqueado el acceso general a la aplicación.', 'info');
+      showToast('Sesión Cerrada', 'Se ha locked el acceso general a la aplicación.', 'info');
     }
 
     function guardarConfiguracionEmpresa() {
@@ -657,8 +659,17 @@
         document.getElementById('admin-company-pass-input').value = '';
       }
 
+      // Guardar también en la nube Firebase para sincronizar otros dispositivos
+      if (companyConfigRef) {
+        companyConfigRef.set({
+          empresaNombre: companyName,
+          empresaPin: companyPass,
+          updatedAt: Date.now()
+        });
+      }
+
       actualizarTextosEmpresa();
-      showToast('Configuración Guardada', 'Datos de acceso de la empresa actualizados correctamente.', 'success');
+      showToast('Configuración Guardada', 'Datos de acceso de la empresa actualizados en la Nube.', 'success');
     }
 
     // =====================================================================
@@ -782,6 +793,24 @@
         renderEmployeesTable();
         renderHoursTable();
       });
+
+      // Escuchar cambios en la configuración de la empresa en tiempo real
+      if (companyConfigRef) {
+        companyConfigRef.on('value', (snapshot) => {
+          const cfg = snapshot.val();
+          if (cfg) {
+            if (cfg.empresaNombre) {
+              companyName = cfg.empresaNombre;
+              localStorage.setItem('checkin_company_name', companyName);
+            }
+            if (cfg.empresaPin) {
+              companyPass = cfg.empresaPin;
+              localStorage.setItem('checkin_company_pass', companyPass);
+            }
+            actualizarTextosEmpresa();
+          }
+        });
+      }
     }
 
     function playSuccessSound() {
