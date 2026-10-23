@@ -49,9 +49,15 @@
   <!-- PANTALLA DE BLOQUEO / LOGIN DE ACCESO EMPRESARIAL -->
   <div id="auth-lock-screen" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col gap-6 text-center">
-     <div class="w-24 h-24 mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-700 bg-slate-950 p-1 flex items-center justify-center">
-  <img src="https://raw.githubusercontent.com/RANCIDHUBERT/checador-argus/main/logo.png" onerror="this.src='https://i.ibb.co/L5Q8X1H/hubert-logo.jpg'" alt="Hubert CheckIn Pro Logo" class="w-full h-full object-contain rounded-xl">
-</div>
+      
+      <!-- LOGO INTEGRADO SVG (NUNCA FALLA NI DEPENDE DE ARCHIVOS EXTERNOS) -->
+      <div class="w-24 h-24 mx-auto rounded-2xl overflow-hidden shadow-xl border border-blue-500/30 bg-slate-950 p-2 flex items-center justify-center">
+        <svg viewBox="0 0 100 100" class="w-full h-full text-blue-400" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 25,15 L 25,85 M 75,15 L 75,85 M 25,50 L 75,50" stroke-width="10" stroke="#3b82f6" />
+          <path d="M 38,48 L 48,60 L 68,36" stroke-width="10" stroke="#10b981" />
+        </svg>
+      </div>
+
       <div>
         <h2 class="text-2xl font-black text-white tracking-tight">Hubert CheckIn Pro</h2>
         <p class="text-xs text-slate-400 mt-1">Acceso Privado Administrador de Empresa</p>
@@ -77,11 +83,15 @@
     <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700/60 sticky top-0 z-30 px-6 py-4">
       <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
         <div class="flex items-center gap-3">
-          <!-- LOGO DE LA EMPRESA HUBERT -->
-         <!-- LOGO DE LA EMPRESA HUBERT CORREGIDO -->
-<div class="w-12 h-12 rounded-xl overflow-hidden shadow-lg shadow-blue-500/20 border border-slate-700/60 flex items-center justify-center bg-slate-950 p-0.5">
-  <img src="https://raw.githubusercontent.com/RANCIDHUBERT/checador-argus/main/logo.png" onerror="this.src='https://i.ibb.co/L5Q8X1H/hubert-logo.jpg'" alt="Hubert CheckIn Pro Logo" class="w-full h-full object-contain rounded-lg">
-</div>
+          
+          <!-- LOGO DE ENCABEZADO INTEGRADO DIRECTO EN CÓDIGO -->
+          <div class="w-12 h-12 rounded-xl overflow-hidden shadow-lg shadow-blue-500/20 border border-blue-500/30 flex items-center justify-center bg-slate-950 p-1.5">
+            <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M 25,15 L 25,85 M 75,15 L 75,85 M 25,50 L 75,50" stroke="#3b82f6" />
+              <path d="M 38,48 L 48,60 L 68,36" stroke="#10b981" />
+            </svg>
+          </div>
+
           <div>
             <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
               Hubert CheckIn Pro <span id="sync-status-pill" class="text-xs font-semibold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync</span>
@@ -159,14 +169,14 @@
             <p class="text-slate-400 text-sm">Selecciona un empleado para habilitar el registro</p>
           </div>
 
-          <!-- CAMPO PIN PERSONAL DEL EMPLEADO -->
+          <!-- CAMPO PIN PERSONAL DEL EMPLEADO OBLIGATORIO -->
           <div id="pin-input-container" class="hidden bg-slate-900/90 border border-amber-500/40 rounded-xl p-4 flex flex-col gap-2 shadow-inner">
             <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
               <i data-lucide="key" class="w-4 h-4"></i>
-              Ingresa tu PIN Secreto de Empleado
+              Ingresa tu PIN Personal de Colaborador
             </label>
             <input type="password" id="employee-pin-input" oninput="checkCanSubmit()" maxlength="8" placeholder="****" class="w-full bg-slate-800 border border-slate-700 text-amber-300 font-mono tracking-widest text-center text-xl rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-500">
-            <p class="text-[11px] text-slate-400 italic text-center">Requerido para confirmar tu identidad</p>
+            <p class="text-[11px] text-slate-400 italic text-center">Obligatorio para autorizar tu registro</p>
           </div>
 
           <!-- ESTADO GPS Y DISPOSITIVO EN TIEMPO REAL -->
@@ -403,7 +413,7 @@
                   <th class="p-3.5">ID</th>
                   <th class="p-3.5">Nombre</th>
                   <th class="p-3.5">Departamento</th>
-                  <th class="p-3.5">Estado Dispositivo</th>
+                  <th class="p-3.5">PIN Configurado</th>
                   <th class="p-3.5 text-right">Acciones</th>
                 </tr>
               </thead>
@@ -709,8 +719,8 @@
 
       const pinVal = document.getElementById('employee-pin-input')?.value || '';
 
-      if (emp.pin && pinVal !== emp.pin) {
-        showToast('PIN Incorrecto', 'El PIN de empleado ingresado no coincide.', 'error');
+      if (!pinVal || (emp.pin && pinVal !== emp.pin)) {
+        showToast('PIN Incorrecto', 'El PIN personal ingresado no coincide con el colaborador seleccionado.', 'error');
         document.getElementById('employee-pin-input').value = '';
         checkCanSubmit();
         return;
@@ -980,10 +990,12 @@
       selectedEmployeeId = document.getElementById('employee-select').value;
       const card = document.getElementById('employee-card');
       const pinContainer = document.getElementById('pin-input-container');
+      const pinInput = document.getElementById('employee-pin-input');
 
       if (!selectedEmployeeId) {
         card.innerHTML = `<div class="p-4 bg-slate-800 rounded-full text-slate-600 mb-1"><i data-lucide="user" class="w-10 h-10"></i></div><p class="text-slate-400 text-sm">Selecciona un empleado</p>`;
         pinContainer.classList.add('hidden');
+        if (pinInput) pinInput.value = '';
         lucide.createIcons();
         checkCanSubmit();
         return;
@@ -1000,6 +1012,7 @@
             </div>
           </div>`;
         pinContainer.classList.remove('hidden');
+        if (pinInput) pinInput.value = '';
         lucide.createIcons();
       }
       checkCanSubmit();
@@ -1063,7 +1076,7 @@
           <td class="p-3.5 font-mono text-slate-300">${emp.id}</td>
           <td class="p-3.5 font-medium text-white">${emp.name}</td>
           <td class="p-3.5 text-slate-400">${emp.dept}</td>
-          <td class="p-3.5"><span class="px-2 py-0.5 rounded text-xs bg-emerald-500/10 text-emerald-400">Activo</span></td>
+          <td class="p-3.5 font-mono text-amber-300">****</td>
           <td class="p-3.5 text-right flex justify-end gap-2">
             <button onclick="eliminarEmpleado('${emp.id}')" class="p-1.5 bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
           </td>
@@ -1087,6 +1100,7 @@
       resetFormEmpleado();
       renderEmployeeSelect();
       renderEmployeesTable();
+      showToast('Empleado Creado', `Se registró a ${name} con su PIN personal.`, 'success');
     }
 
     function resetFormEmpleado() {
