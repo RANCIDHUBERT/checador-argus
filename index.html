@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Control de Asistencia - CheckIn Pro Cloud Edition</title>
+  <title>Control de Asistencia - HUBERT CHECKIN PRO</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -55,7 +55,7 @@
       </div>
 
       <div>
-        <h2 id="login-company-display-name" class="text-2xl font-black text-white tracking-tight">CheckIn Pro Cloud</h2>
+        <h2 id="login-company-display-name" class="text-2xl font-black text-white tracking-tight">HUBERT CHECKIN PRO</h2>
         <p class="text-xs text-slate-400 mt-1">Acceso restringido para personal autorizado</p>
       </div>
 
@@ -92,7 +92,7 @@
         </div>
         <div>
           <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-            <span id="header-company-title">CheckIn Pro</span> <span class="text-xs font-semibold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync</span>
+            <span id="header-company-title">HUBERT CHECKIN PRO</span> <span class="text-xs font-semibold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync</span>
           </h1>
           <p class="text-xs text-slate-400">Control de Asistencia Multidispositivo con Registro de Horas Trabajadas</p>
         </div>
@@ -428,7 +428,7 @@
           <div class="flex flex-col gap-3">
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Nombre de la Empresa / Sistema</label>
-              <input type="text" id="cfg-company-name" placeholder="Ej. CheckIn Pro Cloud" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+              <input type="text" id="cfg-company-name" placeholder="Ej. HUBERT CHECKIN PRO" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Nueva Clave de Acceso General</label>
@@ -486,7 +486,7 @@
 
   <!-- PIE DE PÁGINA -->
   <footer class="bg-slate-950 border-t border-slate-800 px-6 py-4 text-center text-xs text-slate-500">
-    <p>© 2026 CheckIn Pro Cloud - Sincronización Remota y Control de Jornadas Laborales</p>
+    <p>© 2026 HUBERT CHECKIN PRO - Sincronización Remota y Control de Jornadas Laborales</p>
   </footer>
 
   <!-- LÓGICA DE LA APLICACIÓN -->
@@ -531,7 +531,7 @@
     
     // LOGIN DE EMPRESA
     let companyPassword = 'empresa123';
-    let companyName = 'CheckIn Pro Cloud';
+    let companyName = 'HUBERT CHECKIN PRO';
     let isCompanyLoggedIn = false;
 
     let isAdminActive = false;
@@ -1100,7 +1100,7 @@
       const cred = await navigator.credentials.create({
         publicKey: {
           challenge,
-          rp: { name: 'CheckIn Pro', id: location.hostname },
+          rp: { name: 'HUBERT CHECKIN PRO', id: location.hostname },
           user: { id: userId, name: emp.id, displayName: emp.name },
           pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
           authenticatorSelection: {
