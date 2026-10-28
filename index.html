@@ -142,11 +142,20 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Buscar o Seleccionar Empleado</label>
-          <div class="relative">
-            <select id="employee-select" onchange="onSelectEmployee()" class="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl px-4 py-3.5 pr-10 appearance-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-medium text-sm">
-              <option value="">-- Seleccione un colaborador --</option>
-            </select>
-            <i data-lucide="chevron-down" class="w-5 h-5 text-slate-500 absolute right-3 top-3.5 pointer-events-none"></i>
+          <!-- COMBOBOX / BUSCADOR INTERACTIVO -->
+          <div class="relative" id="employee-combobox-wrapper">
+            <div class="relative flex items-center">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none z-10"></i>
+              <input type="text" id="employee-search-input" oninput="filterEmployeeCombobox()" onfocus="openEmployeeCombobox()" placeholder="Escribe nombre o ID..." class="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl pl-10 pr-10 py-3.5 focus:outline-none focus:border-blue-500 font-medium text-sm">
+              <button type="button" onclick="toggleEmployeeCombobox()" class="absolute right-3 p-1 text-slate-400 hover:text-white">
+                <i data-lucide="chevron-down" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <!-- DESPLEGABLE CON LISTA FILTRABLE -->
+            <div id="employee-dropdown-list" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto custom-scrollbar z-40 divide-y divide-slate-800/80">
+              <!-- Carga dinámica -->
+            </div>
           </div>
         </div>
 
@@ -442,6 +451,7 @@
 
           <form id="employee-form" onsubmit="guardarEmpleado(event)" class="flex flex-col gap-3">
             <input type="hidden" id="emp-edit-index" value="-1">
+            <input type="hidden" id="emp-photo-base64" value="">
             
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">ID / N° de Empleado</label>
@@ -466,6 +476,31 @@
               <input type="password" id="emp-pin" required maxlength="8" placeholder="Ej. 1234" class="w-full bg-slate-800 border border-amber-500/40 rounded-lg px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-500">
             </div>
 
+            <!-- CAMPO SUBIR FOTOGRAFÍA DE COLABORADOR -->
+            <div>
+              <label class="block text-xs font-bold text-sky-400 mb-1 flex items-center gap-1">
+                <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                Fotografía del Colaborador
+              </label>
+              
+              <div class="flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-lg p-2.5">
+                <div id="emp-photo-preview-container" class="w-12 h-12 rounded-full bg-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center border border-slate-600">
+                  <i data-lucide="image" class="w-6 h-6 text-slate-500"></i>
+                </div>
+                
+                <div class="flex-1 flex flex-col gap-1">
+                  <input type="file" id="emp-photo-file" accept="image/*" onchange="procesarFotoSeleccionada(event)" class="hidden">
+                  <button type="button" onclick="document.getElementById('emp-photo-file').click()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-md text-xs font-semibold border border-slate-600 transition flex items-center gap-1.5 w-fit">
+                    <i data-lucide="upload" class="w-3.5 h-3.5"></i> Seleccionar Imagen
+                  </button>
+                  <button type="button" id="btn-remove-photo" onclick="removerFotoSeleccionada()" class="hidden text-[11px] text-rose-400 hover:underline w-fit">
+                    Eliminar foto
+                  </button>
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">Soporta JPG, PNG o cámara en celular. Comprimida automáticamente para sincronización rápida.</p>
+            </div>
+
             <div class="flex gap-2 pt-2">
               <button type="submit" id="btn-save-emp" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg text-xs transition">Guardar Colaborador</button>
               <button type="button" id="btn-cancel-emp-edit" onclick="resetFormEmpleado()" class="hidden bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold px-3 py-2.5 rounded-lg text-xs transition">Cancelar</button>
@@ -477,6 +512,7 @@
           <table class="w-full text-left text-xs text-slate-300">
             <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
               <tr>
+                <th class="p-3.5">Foto</th>
                 <th class="p-3.5">ID</th>
                 <th class="p-3.5">Nombre</th>
                 <th class="p-3.5">Departamento</th>
@@ -1095,20 +1131,114 @@
       }
     }
 
+    // =====================================================================
+    // COMBOBOX INTERACTIVO Y RECONOCIMIENTO AUTOMÁTICO DE DISPOSITIVO
+    // =====================================================================
     function renderEmployeeSelect() {
-      const select = document.getElementById('employee-select');
       const faltaSelect = document.getElementById('falta-employee-select');
-
       const optionsHtml = '<option value="">-- Seleccione un colaborador --</option>' + 
         empleados.map(emp => `<option value="${emp.id}">${emp.id} - ${emp.name}</option>`).join('');
 
-      if (select) select.innerHTML = optionsHtml;
       if (faltaSelect) faltaSelect.innerHTML = optionsHtml;
+
+      // Auto-reconocimiento por dispositivo
+      const matchedDeviceEmp = empleados.find(e => e.registeredDeviceToken === currentDeviceToken);
+      if (matchedDeviceEmp && !selectedEmployeeId) {
+        selectedEmployeeId = matchedDeviceEmp.id;
+        const searchInput = document.getElementById('employee-search-input');
+        if (searchInput) searchInput.value = `${matchedDeviceEmp.name} (${matchedDeviceEmp.id})`;
+        onSelectEmployee();
+      } else {
+        renderEmployeeComboboxList();
+      }
     }
 
+    function renderEmployeeComboboxList(filterText = '') {
+      const dropdown = document.getElementById('employee-dropdown-list');
+      if (!dropdown) return;
+
+      const term = filterText.toLowerCase().trim();
+      const matchedDeviceEmp = empleados.find(e => e.registeredDeviceToken === currentDeviceToken);
+
+      const filtered = empleados.filter(e => 
+        e.name.toLowerCase().includes(term) || e.id.toLowerCase().includes(term) || e.dept.toLowerCase().includes(term)
+      );
+
+      if (filtered.length === 0) {
+        dropdown.innerHTML = `<div class="p-4 text-center text-xs text-slate-500 italic">No se encontraron colaboradores</div>`;
+        return;
+      }
+
+      dropdown.innerHTML = filtered.map(emp => {
+        const isDeviceOwner = emp.registeredDeviceToken === currentDeviceToken;
+        const isSelected = emp.id === selectedEmployeeId;
+
+        return `
+          <div onclick="selectEmployeeFromCombobox('${emp.id}')" class="p-3 hover:bg-slate-800/80 cursor-pointer transition flex items-center justify-between ${isSelected ? 'bg-blue-600/20 border-l-4 border-blue-500' : ''}">
+            <div>
+              <p class="font-medium text-xs text-white flex items-center gap-1.5">
+                ${emp.name}
+                ${isDeviceOwner ? '<span class="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold border border-emerald-500/30 rounded">Tu Equipo</span>' : ''}
+              </p>
+              <p class="text-[11px] text-slate-400">ID: ${emp.id} | ${emp.dept}</p>
+            </div>
+            ${isSelected ? '<i data-lucide="check" class="w-4 h-4 text-blue-400"></i>' : ''}
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    function openEmployeeCombobox() {
+      const dropdown = document.getElementById('employee-dropdown-list');
+      if (dropdown) dropdown.classList.remove('hidden');
+      renderEmployeeComboboxList(document.getElementById('employee-search-input')?.value || '');
+    }
+
+    function closeEmployeeCombobox() {
+      const dropdown = document.getElementById('employee-dropdown-list');
+      if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    function toggleEmployeeCombobox() {
+      const dropdown = document.getElementById('employee-dropdown-list');
+      if (dropdown) {
+        if (dropdown.classList.contains('hidden')) {
+          openEmployeeCombobox();
+        } else {
+          closeEmployeeCombobox();
+        }
+      }
+    }
+
+    function filterEmployeeCombobox() {
+      openEmployeeCombobox();
+    }
+
+    function selectEmployeeFromCombobox(empId) {
+      const emp = empleados.find(e => e.id === empId);
+      if (!emp) return;
+
+      selectedEmployeeId = emp.id;
+      const searchInput = document.getElementById('employee-search-input');
+      if (searchInput) {
+        searchInput.value = `${emp.name} (${emp.id})`;
+      }
+
+      closeEmployeeCombobox();
+      onSelectEmployee();
+    }
+
+    // Cerrar combobox si se hace clic fuera del buscador
+    document.addEventListener('click', (e) => {
+      const wrapper = document.getElementById('employee-combobox-wrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        closeEmployeeCombobox();
+      }
+    });
+
     function onSelectEmployee() {
-      const select = document.getElementById('employee-select');
-      selectedEmployeeId = select.value;
       const card = document.getElementById('employee-card');
       const pinContainer = document.getElementById('pin-input-container');
       const pinInput = document.getElementById('employee-pin-input');
@@ -1137,13 +1267,15 @@
           statusDispositivo = '<span class="text-amber-400">Se vinculará tu huella en tu próximo registro</span>';
         }
 
+        const photoHtml = emp.photo 
+          ? `<img src="${emp.photo}" class="w-16 h-16 rounded-full object-cover border-2 border-blue-500 shadow-md flex-shrink-0">`
+          : `<div class="p-3 bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-full flex-shrink-0"><i data-lucide="user-check" class="w-8 h-8"></i></div>`;
+
         card.innerHTML = `
           <div class="flex items-center gap-4 w-full text-left">
-            <div class="p-3 bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-xl flex-shrink-0">
-              <i data-lucide="user-check" class="w-8 h-8"></i>
-            </div>
-            <div class="flex-1">
-              <h3 class="font-bold text-white text-base">${emp.name}</h3>
+            ${photoHtml}
+            <div class="flex-1 overflow-hidden">
+              <h3 class="font-bold text-white text-base truncate">${emp.name}</h3>
               <p class="text-xs text-slate-400">ID: <span class="text-slate-200 font-mono">${emp.id}</span> | Depto: <span class="text-slate-200">${emp.dept}</span></p>
               <p class="text-[11px] mt-1">${statusDispositivo}</p>
             </div>
@@ -1696,12 +1828,13 @@
 
       showToast(tolResult.retardo ? 'Entrada con Retardo' : '¡Registro Exitoso!', msgToast, tolResult.retardo ? 'error' : 'success');
 
-      document.getElementById('employee-select').value = '';
+      document.getElementById('employee-search-input').value = '';
       document.getElementById('employee-pin-input').value = '';
       document.getElementById('pin-input-container').classList.add('hidden');
       selectedEmployeeId = '';
       selectedEventType = '';
       document.querySelectorAll('.event-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-slate-700/80', 'ring-2', 'ring-blue-500/50'));
+      renderEmployeeSelect();
       onSelectEmployee();
       renderHistoryTable();
       renderHoursTable();
@@ -1969,7 +2102,7 @@
       const tbody = document.getElementById('employees-table-body');
       
       if (empleados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">No hay empleados registrados.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">No hay empleados registrados.</td></tr>`;
         return;
       }
 
@@ -1983,8 +2116,13 @@
           ? `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 ml-1.5 rounded-md text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20"><i data-lucide="fingerprint" class="w-3 h-3"></i> Huella</span>`
           : '';
 
+        const photoImg = emp.photo 
+          ? `<img src="${emp.photo}" class="w-9 h-9 rounded-full object-cover border border-slate-600">`
+          : `<div class="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center text-slate-400 border border-slate-600"><i data-lucide="user" class="w-5 h-5"></i></div>`;
+
         return `
           <tr class="hover:bg-slate-700/30 transition">
+            <td class="p-3.5">${photoImg}</td>
             <td class="p-3.5 font-mono text-slate-300">${emp.id}</td>
             <td class="p-3.5 font-medium text-white">${emp.name}</td>
             <td class="p-3.5 text-slate-400">${emp.dept}</td>
@@ -1995,7 +2133,7 @@
                   <i data-lucide="smartphone-nfc" class="w-4 h-4"></i>
                 </button>
               ` : ''}
-              <button onclick="prepararEdicionEmpleado(${index})" class="p-1.5 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition" title="Editar / Cambiar PIN">
+              <button onclick="prepararEdicionEmpleado(${index})" class="p-1.5 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition" title="Editar / Cambiar PIN / Foto">
                 <i data-lucide="edit-3" class="w-4 h-4"></i>
               </button>
               <button onclick="eliminarEmpleado('${emp.id}')" class="p-1.5 bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-lg transition" title="Eliminar">
@@ -2009,6 +2147,61 @@
       lucide.createIcons();
     }
 
+    function procesarFotoSeleccionada(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxDim = 300;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          document.getElementById('emp-photo-base64').value = compressedBase64;
+
+          const previewContainer = document.getElementById('emp-photo-preview-container');
+          if (previewContainer) {
+            previewContainer.innerHTML = `<img src="${compressedBase64}" class="w-full h-full object-cover">`;
+          }
+          document.getElementById('btn-remove-photo')?.classList.remove('hidden');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removerFotoSeleccionada() {
+      document.getElementById('emp-photo-base64').value = '';
+      document.getElementById('emp-photo-file').value = '';
+      const previewContainer = document.getElementById('emp-photo-preview-container');
+      if (previewContainer) {
+        previewContainer.innerHTML = `<i data-lucide="image" class="w-6 h-6 text-slate-500"></i>`;
+      }
+      document.getElementById('btn-remove-photo')?.classList.add('hidden');
+      lucide.createIcons();
+    }
+
     function guardarEmpleado(e) {
       e.preventDefault();
       const editIndex = parseInt(document.getElementById('emp-edit-index').value);
@@ -2016,6 +2209,7 @@
       const name = document.getElementById('emp-name').value.trim();
       const dept = document.getElementById('emp-dept').value.trim();
       const pin = document.getElementById('emp-pin').value.trim();
+      const photo = document.getElementById('emp-photo-base64').value || null;
 
       if (!id || !name || !dept || !pin) {
         alert('Por favor completa todos los campos, incluyendo el PIN del empleado.');
@@ -2033,6 +2227,7 @@
         name, 
         dept, 
         pin,
+        photo: photo || (existingEmp ? existingEmp.photo || null : null),
         registeredDeviceToken: existingEmp ? (existingEmp.registeredDeviceToken || null) : null,
         credId: existingEmp ? (existingEmp.credId || null) : null,
         credPubKey: existingEmp ? (existingEmp.credPubKey || null) : null,
@@ -2041,14 +2236,14 @@
 
       if (editIndex >= 0) {
         empleados[editIndex] = empData;
-        showToast('Empleado Actualizado', `Datos y PIN de ${name} corregidos.`, 'success');
+        showToast('Empleado Actualizado', `Datos, foto y PIN de ${name} corregidos.`, 'success');
       } else {
         if (empleados.some(emp => emp.id === id)) {
           alert('Ya existe un colaborador con este mismo ID.');
           return;
         }
         empleados.push(empData);
-        showToast('Colaborador Registrado', `${name} guardado con su PIN personal.`, 'success');
+        showToast('Colaborador Registrado', `${name} guardado con su fotografía y PIN.`, 'success');
       }
 
       localStorage.setItem('checkin_employees', JSON.stringify(empleados));
@@ -2062,29 +2257,6 @@
       renderHoursTable();
     }
 
-    function desvincularDispositivo(empId) {
-      const emp = empleados.find(e => e.id === empId);
-      if (!emp) return;
-
-      if (confirm(`¿Deseas desvincular el celular registrado de ${emp.name}? Podrá registrar un nuevo teléfono en su próximo chequeo.`)) {
-        emp.registeredDeviceToken = null;
-        emp.credId = null;
-        emp.credPubKey = null;
-        emp.credAlg = null;
-        localStorage.setItem('checkin_employees', JSON.stringify(empleados));
-        if (employeesRef) {
-          employeesRef.child(empId.replace(/[^a-zA-Z0-9]/g, '_')).update({
-            registeredDeviceToken: null,
-            credId: null,
-            credPubKey: null,
-            credAlg: null
-          });
-        }
-        renderEmployeesTable();
-        showToast('Dispositivo Liberado', `Se ha liberado el acceso para ${emp.name}.`, 'info');
-      }
-    }
-
     function prepararEdicionEmpleado(index) {
       const emp = empleados[index];
       if (!emp) return;
@@ -2094,6 +2266,18 @@
       document.getElementById('emp-name').value = emp.name;
       document.getElementById('emp-dept').value = emp.dept;
       document.getElementById('emp-pin').value = emp.pin || '';
+      document.getElementById('emp-photo-base64').value = emp.photo || '';
+
+      const previewContainer = document.getElementById('emp-photo-preview-container');
+      if (previewContainer) {
+        if (emp.photo) {
+          previewContainer.innerHTML = `<img src="${emp.photo}" class="w-full h-full object-cover">`;
+          document.getElementById('btn-remove-photo')?.classList.remove('hidden');
+        } else {
+          previewContainer.innerHTML = `<i data-lucide="image" class="w-6 h-6 text-slate-500"></i>`;
+          document.getElementById('btn-remove-photo')?.classList.add('hidden');
+        }
+      }
 
       document.getElementById('employee-form-title').innerHTML = `
         <i data-lucide="edit" class="w-4 h-4 text-amber-400"></i>
@@ -2109,6 +2293,9 @@
     function resetFormEmpleado() {
       document.getElementById('employee-form').reset();
       document.getElementById('emp-edit-index').value = '-1';
+      document.getElementById('emp-photo-base64').value = '';
+      removerFotoSeleccionada();
+
       document.getElementById('employee-form-title').innerHTML = `
         <i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i>
         Agregar Nuevo Colaborador
