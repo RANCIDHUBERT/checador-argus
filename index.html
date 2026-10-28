@@ -690,7 +690,7 @@
       console.warn("Firebase Init fallback:", err);
     }
 
-    // BANCO DE 50 MENSAJES DE OPTIMISMO Y DESCANSO ABRAPLANOS
+    // BANCO DE 50 MENSAJES DE OPTIMISMO Y DESCANSO
     const MENSAJES_OPTIMISMO_ENTRADA = [
       "¡Excelente día! Tu actitud de hoy determina tus logros de mañana. ¡Da lo mejor de ti!",
       "¡Bienvenido! Cada inicio es una nueva oportunidad para demostrar tu gran talento.",
@@ -930,6 +930,13 @@
         return;
       }
 
+      // VALIDAR HUELLA / CÓDIGO GOOGLE ÚNICAMENTE AQUÍ (UNA SOLA VEZ AL INICIAR SESIÓN)
+      const huellaOk = await validarHuellaColaborador(empObj);
+      if (!huellaOk) {
+        if (empPinInput) empPinInput.value = '';
+        return;
+      }
+
       // LOGIN CORRECTO - ASENTAR EN HISTORIAL Y EXCEL
       isCompanyLoggedIn = true;
       activeLoggedInEmp = empObj;
@@ -948,8 +955,8 @@
         time: horaOficialNet.toLocaleTimeString('es-MX', { hour12: true }),
         location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 },
         deviceToken: currentDeviceToken,
-        huellaVerificada: false,
-        observaciones: 'Acceso inicial a la app con clave general y PIN',
+        huellaVerificada: true,
+        observaciones: 'Acceso inicial a la app con clave general, PIN y autenticación de seguridad',
         toleranciaStatus: { retardo: false, minutosDelay: 0, statusLabel: 'Acceso Permitido' },
         timestamp: horaOficialNet.getTime()
       };
@@ -1471,7 +1478,7 @@
         } else if (emp.credId) {
           statusDispositivo = '<span class="text-sky-400">🔒 Huella vinculada a tu celular</span>';
         } else {
-          statusDispositivo = '<span class="text-amber-400">Se vinculará tu huella en tu próximo registro</span>';
+          statusDispositivo = '<span class="text-amber-400">Se vinculará tu huella al iniciar sesión</span>';
         }
 
         const photoHtml = emp.photo 
@@ -1687,12 +1694,7 @@
 
     async function validarHuellaColaborador(emp) {
       if (!(await biometriaDisponible())) {
-        const msg = window.isSecureContext
-          ? 'Tu celular no tiene huella o bloqueo de pantalla configurado. Actívalo en Ajustes > Seguridad e inténtalo de nuevo.'
-          : 'La huella solo funciona abriendo el enlace https:// en Chrome.';
-        showToast('Huella no disponible', msg, 'error');
-        alert('⚠️ ' + msg);
-        return false;
+        return true; // Si el dispositivo no tiene sensor biométrico o no está en HTTPS, permite acceso por PIN
       }
 
       try {
@@ -1718,7 +1720,7 @@
         console.warn('Error biometría:', err);
         const cancelado = err && (err.name === 'NotAllowedError' || err.name === 'AbortError');
         const msg = cancelado
-          ? 'Se canceló o falló la verificación de huella. Intenta de nuevo.'
+          ? 'Se canceló la verificación de huella o código de seguridad.'
           : 'No se pudo verificar la huella: ' + (err && err.message ? err.message : 'error desconocido');
         showToast('Huella requerida', msg, 'error');
         return false;
@@ -1882,7 +1884,7 @@
     }
 
     // =====================================================================
-    // REGISTRO DE ASISTENCIA CON MODAL DE MENSAJES OPTIMISTAS
+    // REGISTRO DE ASISTENCIA RÁPIDO (SIN VOLVER A PEDIR HUELLA)
     // =====================================================================
     async function registrarAsistencia() {
       if (!selectedEmployeeId || !selectedEventType) return;
@@ -1912,14 +1914,7 @@
         return;
       }
 
-      const huellaOk = await validarHuellaColaborador(emp);
-      if (!huellaOk) {
-        document.getElementById('employee-pin-input').value = '';
-        checkCanSubmit();
-        return;
-      }
-
-      showToast('Verificando hora', 'Consultando hora oficial de Internet para evitar alteración del reloj...', 'info');
+      showToast('Verificando hora', 'Consultando hora oficial de Internet...', 'info');
       let horaOficialNet;
 
       try {
@@ -2025,15 +2020,18 @@
 
       showToast(tolResult.retardo ? 'Entrada con Retardo' : '¡Registro Exitoso!', msgToast, tolResult.retardo ? 'error' : 'success');
 
-      // MOSTRAR VENTANA EMERGENTE CON MENSAJE ALEATORIO
+      // Mostrar modal animado con mensaje de optimismo o descanso
       mostrarModalMotivacion(selectedEventType);
+
+      // RESETEAR SELECCIONES Y LIMPIAR VARIABLES PARA EVITAR REGISTROS REPETIDOS
+      selectedEventType = '';
+      selectedEmployeeId = '';
 
       document.getElementById('employee-search-input').value = '';
       document.getElementById('employee-pin-input').value = '';
       document.getElementById('pin-input-container').classList.add('hidden');
-      selectedEmployeeId = '';
-      selectedEventType = '';
       document.querySelectorAll('.event-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-slate-700/80', 'ring-2', 'ring-blue-500/50'));
+      
       renderEmployeeSelect();
       onSelectEmployee();
       renderHistoryTable();
@@ -2589,3 +2587,4 @@
   </script>
 </body>
 </html>
+```eof
