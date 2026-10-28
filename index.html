@@ -8,12 +8,13 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
   <!-- SheetJS para exportar a Excel REAL (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <!-- Firebase App & Database SDKs (v9 Compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
@@ -122,6 +123,22 @@
         </p>
       </div>
 
+    </div>
+  </div>
+
+  <!-- LOGIN DE ADMINISTRADOR (Firebase Authentication) -->
+  <div id="admin-login-modal" class="fixed inset-0 z-[80] bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col gap-5 border-t-4 border-t-amber-500">
+      <div class="text-center">
+        <h3 class="text-xl font-black text-white">Acceso de Administrador</h3>
+        <p class="text-xs text-slate-400 mt-1">Ingresa con tu cuenta de administrador</p>
+      </div>
+      <form onsubmit="loginAdminFirebase(event)" class="flex flex-col gap-3">
+        <input type="email" id="admin-email-input" required autocomplete="username" placeholder="Correo del administrador" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500">
+        <input type="password" id="admin-pass-input" required autocomplete="current-password" placeholder="Contraseña" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500">
+        <button type="submit" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-sm transition active:scale-95">Entrar</button>
+        <button type="button" onclick="cerrarModalAdminLogin()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition">Cancelar</button>
+      </form>
     </div>
   </div>
 
@@ -516,7 +533,7 @@
                 <i data-lucide="key" class="w-3.5 h-3.5"></i>
                 PIN Secreto para Checado (4-8 dígitos)
               </label>
-              <input type="password" id="emp-pin" required maxlength="8" placeholder="Ej. 1234" class="w-full bg-slate-800 border border-amber-500/40 rounded-lg px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-500">
+              <input type="password" id="emp-pin" required maxlength="8" placeholder="PIN de 4 a 8 dígitos" class="w-full bg-slate-800 border border-amber-500/40 rounded-lg px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-500">
             </div>
 
             <!-- CAMPO SUBIR FOTOGRAFÍA DE COLABORADOR -->
@@ -632,15 +649,15 @@
         <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-4">
           <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2 border-b border-slate-700 pb-3">
             <i data-lucide="key" class="w-4 h-4 text-amber-400"></i>
-            Cambiar PIN de Administrador (Acceso al Panel)
+            Cambiar contraseña de Administrador (Acceso al Panel)
           </h3>
           <div class="flex flex-col gap-3">
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Nuevo PIN de Acceso Admin</label>
-              <input type="password" id="new-pin-input" maxlength="8" placeholder="Ingrese nuevo PIN (ej. 5678)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+              <label class="block text-xs font-medium text-slate-400 mb-1">Nueva contraseña de Admin (mínimo 8 caracteres)</label>
+              <input type="password" id="new-pin-input" autocomplete="new-password" placeholder="Nueva contraseña" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
             </div>
-            <button onclick="cambiarPinAdmin()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-lg text-xs transition self-start px-4">
-              Guardar Nuevo PIN Admin
+            <button onclick="cambiarPasswordAdmin()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-lg text-xs transition self-start px-4">
+              Guardar Nueva Contraseña
             </button>
           </div>
         </div>
@@ -672,10 +689,20 @@
     // =====================================================================
     const FIREBASE_URL = "https://checador-empresa-6b10a-default-rtdb.firebaseio.com/";
 
+    // >>> COMPLETA ESTOS DOS DATOS (Firebase Console > Configuración del proyecto) <<<
+    // La apiKey de Firebase es pública por diseño; lo que protege tus datos son las REGLAS.
+    const FIREBASE_API_KEY = "AIzaSyCHJySdiXmkrkrJKb5v_CjCu64ZJib-yio";
+    // UID del usuario administrador (Firebase Console > Authentication > Usuarios).
+    const ADMIN_UID = "urLMz4Tiy5QagBMkFk5fznD5HPE2";
+
     let defaultFirebaseConfig = {
+      apiKey: FIREBASE_API_KEY,
+      authDomain: "checador-empresa-6b10a.firebaseapp.com",
+      projectId: "checador-empresa-6b10a",
       databaseURL: FIREBASE_URL
     };
 
+    let auth = null;
     let db = null;
     let historyRef = null;
     let employeesRef = null;
@@ -686,6 +713,9 @@
       if (typeof firebase !== 'undefined' && !firebase.apps.length) {
         firebase.initializeApp(defaultFirebaseConfig);
       }
+      if (typeof firebase !== 'undefined' && firebase.auth) {
+        auth = firebase.auth();
+      }
       if (typeof firebase !== 'undefined' && firebase.database) {
         db = firebase.database();
         historyRef = db.ref('historial');
@@ -694,6 +724,28 @@
       }
     } catch (err) {
       console.warn("Error en inicialización de Firebase:", err);
+    }
+
+    // Sesión anónima para los dispositivos de los colaboradores.
+    // Si quedó una sesión de admin guardada en el navegador, se cierra al arrancar.
+    async function asegurarSesionAnonima() {
+      if (!auth) return false;
+      try {
+        const actual = await new Promise((resolve) => {
+          const unsub = auth.onAuthStateChanged((u) => { unsub(); resolve(u); });
+        });
+        if (actual && !actual.isAnonymous) {
+          await auth.signOut();
+        }
+        if (!auth.currentUser) {
+          await auth.signInAnonymously();
+        }
+        return true;
+      } catch (err) {
+        console.error('Error de autenticación anónima:', err);
+        showToast('Sin autenticación', 'No se pudo iniciar sesión segura con Firebase. Revisa la apiKey y que Authentication anónimo esté activado.', 'error');
+        return false;
+      }
     }
 
     function conectarSincronizacionFirebase() {
@@ -835,7 +887,7 @@
 
     let empleados = JSON.parse(localStorage.getItem('checkin_employees')) || [];
     let historial = JSON.parse(localStorage.getItem('checkin_history')) || [];
-    let adminPin = localStorage.getItem('checkin_admin_pin') || '1234';
+    localStorage.removeItem('checkin_admin_pin'); // ya no se usa PIN local de admin
     
     // LOGIN DE EMPRESA Y COLABORADOR ACTIVO
     let companyPassword = 'empresa123';
@@ -862,7 +914,8 @@
         lucide.createIcons();
       }
       
-      // Conectar listeners de Firebase (incluyendo empresa_config)
+      // Autenticar (anónimo) y luego conectar listeners de Firebase
+      await asegurarSesionAnonima();
       conectarSincronizacionFirebase();
 
       // Sincronizar hora de red al arrancar
@@ -1343,20 +1396,69 @@
 
     function toggleAdminPanel() {
       if (isAdminActive) {
-        isAdminActive = false;
-        document.getElementById('admin-section').classList.add('hidden');
-        document.getElementById('btn-admin-text').innerText = 'Modo Administrador';
-        showToast('Modo Kiosko', 'Se ha cerrado la sesión administrativa.', 'info');
+        cerrarSesionAdmin();
       } else {
-        const inputPin = prompt('Ingrese el PIN de Administrador (Por defecto: 1234):');
-        if (inputPin === adminPin || inputPin === '9999') {
-          isAdminActive = true;
-          document.getElementById('admin-section').classList.remove('hidden');
-          document.getElementById('btn-admin-text').innerText = 'Salir de Admin';
-          showToast('Acceso Concedido', 'Bienvenido al panel de administración.', 'success');
-        } else if (inputPin !== null) {
-          alert('PIN de Administrador incorrecto.');
+        const m = document.getElementById('admin-login-modal');
+        if (m) {
+          m.classList.remove('hidden');
+          document.getElementById('admin-email-input')?.focus();
         }
+      }
+    }
+
+    function cerrarModalAdminLogin() {
+      document.getElementById('admin-login-modal')?.classList.add('hidden');
+      const pass = document.getElementById('admin-pass-input');
+      if (pass) pass.value = '';
+    }
+
+    async function cerrarSesionAdmin() {
+      isAdminActive = false;
+      document.getElementById('admin-section').classList.add('hidden');
+      document.getElementById('btn-admin-text').innerText = 'Modo Administrador';
+      try {
+        if (auth) {
+          await auth.signOut();
+          await auth.signInAnonymously();
+        }
+      } catch (e) {
+        console.warn('Error al cerrar sesión de admin:', e);
+      }
+      showToast('Modo Kiosko', 'Se ha cerrado la sesión administrativa.', 'info');
+    }
+
+    async function loginAdminFirebase(e) {
+      e.preventDefault();
+      const email = document.getElementById('admin-email-input').value.trim();
+      const pass = document.getElementById('admin-pass-input').value;
+
+      if (!auth) {
+        alert('Firebase Authentication no está disponible.');
+        return;
+      }
+      if (ADMIN_UID.startsWith('PEGA_')) {
+        alert('Falta configurar ADMIN_UID en el código (ver instrucciones).');
+        return;
+      }
+
+      try {
+        const cred = await auth.signInWithEmailAndPassword(email, pass);
+        if (cred.user.uid !== ADMIN_UID) {
+          await auth.signOut();
+          await auth.signInAnonymously();
+          alert('Esta cuenta no tiene permisos de administrador.');
+          return;
+        }
+        cerrarModalAdminLogin();
+        isAdminActive = true;
+        document.getElementById('admin-section').classList.remove('hidden');
+        document.getElementById('btn-admin-text').innerText = 'Salir de Admin';
+        showToast('Acceso Concedido', 'Bienvenido al panel de administración.', 'success');
+      } catch (err) {
+        console.warn('Login admin falló:', err && err.code);
+        alert('Correo o contraseña incorrectos.');
+        document.getElementById('admin-pass-input').value = '';
+        try { if (auth && !auth.currentUser) await auth.signInAnonymously(); } catch (_) {}
       }
     }
 
@@ -2570,16 +2672,27 @@
       }
     }
 
-    function cambiarPinAdmin() {
-      const newPin = document.getElementById('new-pin-input').value.trim();
-      if (!newPin || newPin.length < 4) {
-        alert('El PIN de Administrador debe tener al menos 4 dígitos.');
+    async function cambiarPasswordAdmin() {
+      const nueva = document.getElementById('new-pin-input').value;
+      if (!nueva || nueva.length < 8) {
+        alert('La contraseña de Administrador debe tener al menos 8 caracteres.');
         return;
       }
-      adminPin = newPin;
-      localStorage.setItem('checkin_admin_pin', newPin);
-      document.getElementById('new-pin-input').value = '';
-      showToast('PIN Admin Actualizado', 'La nueva clave del panel ha sido guardada.', 'success');
+      if (!auth || !auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+        alert('Necesitas iniciar sesión como administrador.');
+        return;
+      }
+      try {
+        await auth.currentUser.updatePassword(nueva);
+        document.getElementById('new-pin-input').value = '';
+        showToast('Contraseña actualizada', 'La nueva contraseña de administrador quedó guardada.', 'success');
+      } catch (err) {
+        if (err && err.code === 'auth/requires-recent-login') {
+          alert('Por seguridad, cierra la sesión de admin, vuelve a entrar y repite el cambio.');
+        } else {
+          alert('No se pudo cambiar la contraseña: ' + (err && err.message ? err.message : 'error'));
+        }
+      }
     }
 
     function borrarTodoElHistorial() {
