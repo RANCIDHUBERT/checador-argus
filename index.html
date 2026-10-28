@@ -38,7 +38,7 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
 
   <!-- NOTIFICACIÓN TOAST -->
-  <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full opacity-0 transition-all duration-300 ease-out flex items-center gap-3 bg-slate-800 border-l-4 border-emerald-500 text-white px-5 py-4 rounded-xl shadow-2xl">
+  <div id="toast" class="fixed top-5 right-5 z-[60] transform translate-x-full opacity-0 transition-all duration-300 ease-out flex items-center gap-3 bg-slate-800 border-l-4 border-emerald-500 text-white px-5 py-4 rounded-xl shadow-2xl">
     <i id="toast-icon" data-lucide="check-circle" class="w-6 h-6 text-emerald-400"></i>
     <div>
       <h4 id="toast-title" class="font-bold text-sm">Operación exitosa</h4>
@@ -46,7 +46,34 @@
     </div>
   </div>
 
-  <!-- PANTALLA DE LOGIN GENERAL DE EMPRESA (OBLIGATORIA AL ABRIR) -->
+  <!-- VENTANA EMERGENTE (MODAL) DE MENSAJES OPTIMISTAS / DESCANSO -->
+  <div id="motivation-modal" class="fixed inset-0 z-[70] bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4 transition-all">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl p-8 max-w-lg w-full shadow-2xl flex flex-col gap-6 text-center border-t-8 border-t-emerald-500 transform scale-95 transition-transform duration-300" id="motivation-modal-box">
+      
+      <div id="modal-icon-bg" class="mx-auto p-5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl w-fit">
+        <i id="modal-icon" data-lucide="sparkles" class="w-12 h-12"></i>
+      </div>
+
+      <div class="space-y-2">
+        <h3 id="modal-title" class="text-2xl font-black text-white tracking-tight">¡Excelente Trabajo!</h3>
+        <p id="modal-subtitle" class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Mensaje de Optimismo</p>
+      </div>
+
+      <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-6 shadow-inner text-slate-200">
+        <p id="modal-message" class="text-base font-medium leading-relaxed italic">
+          "Cada día es una nueva oportunidad para demostrar de lo que eres capaz. ¡Que tengas una excelente jornada laboral!"
+        </p>
+      </div>
+
+      <button onclick="cerrarModalMotivacion()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm">
+        <i data-lucide="check" class="w-4 h-4"></i>
+        <span>Aceptar y Continuar</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- PANTALLA DE LOGIN GENERAL CON DOBLE VERIFICACIÓN (EMPRESA + COLABORADOR) -->
   <div id="company-login-overlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col gap-6 text-center border-t-4 border-t-blue-500">
       
@@ -56,27 +83,42 @@
 
       <div>
         <h2 id="login-company-display-name" class="text-2xl font-black text-white tracking-tight">HUBERT CHECKIN PRO</h2>
-        <p class="text-xs text-slate-400 mt-1">Acceso restringido para personal autorizado</p>
+        <p class="text-xs text-slate-400 mt-1">Acceso con Clave Empresarial y PIN de Colaborador</p>
       </div>
 
       <form onsubmit="validarLoginEmpresa(event)" class="flex flex-col gap-4 text-left">
         <div>
-          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Clave de Acceso de Empresa</label>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">1. Clave de Acceso de Empresa</label>
           <div class="relative">
-            <input type="password" id="company-password-input" required placeholder="Ingresa la contraseña" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3.5 pl-10 focus:outline-none focus:border-blue-500 font-mono tracking-widest text-center text-lg">
-            <i data-lucide="lock" class="w-5 h-5 text-slate-500 absolute left-3 top-3.5"></i>
+            <input type="password" id="company-password-input" required placeholder="Clave de Empresa" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 pl-10 focus:outline-none focus:border-blue-500 font-mono text-center text-base">
+            <i data-lucide="lock" class="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5"></i>
           </div>
         </div>
 
-        <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">2. ID / Colaborador</label>
+          <select id="login-employee-select" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 text-sm">
+            <option value="">-- Selecciona quién eres --</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">3. PIN Personal del Colaborador</label>
+          <div class="relative">
+            <input type="password" id="login-employee-pin-input" required maxlength="8" placeholder="****" class="w-full bg-slate-800 border border-slate-700 text-amber-300 font-mono tracking-widest text-center text-lg rounded-xl px-4 py-3 pl-10 focus:outline-none focus:border-amber-500">
+            <i data-lucide="key" class="w-4 h-4 text-amber-500 absolute left-3.5 top-3.5"></i>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm mt-2">
           <i data-lucide="log-in" class="w-4 h-4"></i>
-          <span>Ingresar a la Aplicación</span>
+          <span>Validar e Ingresar a la App</span>
         </button>
       </form>
 
-      <div class="border-t border-slate-800 pt-4">
+      <div class="border-t border-slate-800 pt-3">
         <p class="text-[11px] text-slate-500">
-          Si no conoces la clave, ponte en contacto con el administrador del sistema.
+          El inicio de sesión queda asentado con fecha, hora e identidad en el reporte Excel.
         </p>
       </div>
 
@@ -94,7 +136,7 @@
           <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
             <span id="header-company-title">HUBERT CHECKIN PRO</span> <span class="text-xs font-semibold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync</span>
           </h1>
-          <p class="text-xs text-slate-400">Control de Asistencia Multidispositivo con Tolerancia y Registro de Faltas</p>
+          <p class="text-xs text-slate-400">Control de Asistencia Multidispositivo con Registro en Excel</p>
         </div>
       </div>
 
@@ -306,6 +348,7 @@
             <input type="date" id="filter-date" onchange="renderHistoryTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
             <select id="filter-event-type" onchange="renderHistoryTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
               <option value="">Todos los eventos</option>
+              <option value="Login Empresa">Login Empresa</option>
               <option value="Entrada">Entrada</option>
               <option value="Salida Comer">Salida Comer</option>
               <option value="Regreso Comer">Regreso Comer</option>
@@ -647,6 +690,63 @@
       console.warn("Firebase Init fallback:", err);
     }
 
+    // BANCO DE 50 MENSAJES DE OPTIMISMO Y DESCANSO ABRAPLANOS
+    const MENSAJES_OPTIMISMO_ENTRADA = [
+      "¡Excelente día! Tu actitud de hoy determina tus logros de mañana. ¡Da lo mejor de ti!",
+      "¡Bienvenido! Cada inicio es una nueva oportunidad para demostrar tu gran talento.",
+      "¡Hoy es un gran día para brillar! Confía en tus capacidades y avanza firme.",
+      "¡Mucho éxito hoy! Tu esfuerzo diario construye cosas extraordinarias.",
+      "¡Iniciamos labores! Recuerda que un pequeño avance hoy te acerca a tus grandes metas.",
+      "¡Qué gusto verte de nuevo! Vamos con toda la energía a hacer un trabajo impecable.",
+      "¡Excelente jornada! La constancia es el secreto del verdadero éxito.",
+      "¡Buen día! La disciplina de hoy es el triunfo del mañana. ¡A darle con todo!",
+      "¡A dar lo mejor de nosotros! Trabajar en equipo multiplica tus resultados.",
+      "¡Bienvenido al equipo! Haz de este día tu mejor obra maestra.",
+      "¡Energía positiva al máximo! Con tu presencia el equipo es más fuerte.",
+      "¡Feliz inicio de turno! Enfócate en soluciones y celebra cada pequeño logro.",
+      "¡Buenos días! Tu pasión por lo que haces se nota y marca la diferencia.",
+      "¡Con todo el entusiasmo! Si lo puedes soñar y planear, lo puedes lograr.",
+      "¡Excelente día laboral! Nunca te rindas, los grandes resultados toman tiempo.",
+      "¡Bienvenido! Que hoy sobren los aciertos, el aprendizaje y la buena vibra.",
+      "¡Listos para triunfar! La actitud positiva abre puertas que la suerte no puede.",
+      "¡Paso a paso construyes el éxito! Que sea una jornada sumamente productiva.",
+      "¡Tu esfuerzo vale oro! Gracias por ser parte esencial de esta empresa.",
+      "¡Ánimo arriba! Hoy es el día perfecto para romper tus propios récords.",
+      "¡Bienvenido al trabajo! La excelencia no es un acto, es un hábito diario.",
+      "¡Buen día! Empieza con una sonrisa y el trabajo será más ligero y divertido.",
+      "¡Éxito total en tus tareas de hoy! Tu dedicación inspira a todo tu entorno.",
+      "¡A dar el cien por ciento! Un nuevo día representa un abanico de posibilidades.",
+      "¡Que tengas un día brillante! Tu compromiso es el motor de nuestro éxito."
+    ];
+
+    const MENSAJES_DESCANSO_SALIDA = [
+      "¡Excelente descanso! Disfruta tus alimentos y recarga energías para continuar.",
+      "¡Buen provecho y buen descanso! Desconecta unos minutos y relaja tu mente.",
+      "¡Momento de recargar baterías! Te lo has ganado con tu gran esfuerzo diario.",
+      "¡Hora de comer! Disfruta tu espacio y regresa con toda la actitud.",
+      "¡Pausa bien merecida! La salud y el descanso son clave para el buen rendimiento.",
+      "¡Disfruta tus alimentos! Nos vemos en un momento para cerrar el día con broche de oro.",
+      "¡Buen provecho! Respira profundo, estira el cuerpo y disfruta tu receso.",
+      "¡Tiempo de relajación! Un merecido descanso fortalece el cuerpo y la mente.",
+      "¡Fin del turno! Gracias por tu valioso trabajo de hoy. ¡Que tengas un gran descanso!",
+      "¡Misión cumplida por hoy! Disfruta tu tiempo libre, tu familia y tus actividades.",
+      "¡Jornada terminada con éxito! Desconéctate y descansa plácidamente.",
+      "¡Excelente trabajo el de hoy! Ve a casa con la satisfacción del deber cumplido.",
+      "¡A descansar! Gracias por entregar todo tu talento y dedicación durante el turno.",
+      "¡Fin de labores! Recuerda que un buen descanso garantiza un mañana exitoso.",
+      "¡Buen camino a casa! Descansa mucho, nos vemos en tu próximo turno.",
+      "¡Momento de relajarse! Que disfrutes una excelente tarde libre.",
+      "¡Gran labor realizada! Tu dedicación diaria rinde frutos. ¡Feliz tarde!",
+      "¡Receso activo! Aprovecha para despejarte y tomar agua.",
+      "¡Bien merecido tu receso! Disfruta de la comida y de una buena plática.",
+      "¡Misión del día completada! Descansa para seguir conquistando metas mañana.",
+      "¡Excelente tiempo de comida! Desconecta de la rutina por unos momentos.",
+      "¡A cargar energías positivas! Que disfrutes tu receso al máximo.",
+      "¡Fin de jornada! Un descanso reparador te espera. ¡Hasta mañana!",
+      "¡Buen descanso laboral! Celebra lo que lograste hoy en tu turno.",
+      "¡Gracias por tu entrega de hoy! Ve a descansar y a disfrutar con los tuyos."
+    ];
+
     function obtenerDeviceToken() {
       let token = localStorage.getItem('checkin_device_token');
       if (!token) {
@@ -662,10 +762,11 @@
     let historial = JSON.parse(localStorage.getItem('checkin_history')) || [];
     let adminPin = localStorage.getItem('checkin_admin_pin') || '1234';
     
-    // LOGIN DE EMPRESA
+    // LOGIN DE EMPRESA Y COLABORADOR ACTIVO
     let companyPassword = 'empresa123';
     let companyName = 'HUBERT CHECKIN PRO';
     let isCompanyLoggedIn = false;
+    let activeLoggedInEmp = null;
 
     // CONFIGURACIÓN DE HORARIO Y TOLERANCIA
     let officialEntryTime = '08:00';
@@ -719,7 +820,59 @@
     });
 
     // =====================================================================
-    // LOGIN Y CONFIGURACIÓN DE EMPRESA Y TOLERANCIA
+    // MANEJO DE LA VENTANA EMERGENTE (MODAL OPTIMISTA / DESCANSO)
+    // =====================================================================
+    function mostrarModalMotivacion(tipoEvento) {
+      const modal = document.getElementById('motivation-modal');
+      const titleEl = document.getElementById('modal-title');
+      const subtitleEl = document.getElementById('modal-subtitle');
+      const msgEl = document.getElementById('modal-message');
+      const iconEl = document.getElementById('modal-icon');
+      const iconBg = document.getElementById('modal-icon-bg');
+
+      let fraseElegida = "";
+      
+      if (tipoEvento === 'Entrada' || tipoEvento === 'Regreso Comer') {
+        const idx = Math.floor(Math.random() * MENSAJES_OPTIMISMO_ENTRADA.length);
+        fraseElegida = MENSAJES_OPTIMISMO_ENTRADA[idx];
+        
+        titleEl.innerText = "¡Bienvenido a tu Jornada!";
+        subtitleEl.innerText = "Mensaje de Optimismo e Inicio de Labores";
+        subtitleEl.className = "text-xs font-semibold uppercase tracking-wider text-emerald-400";
+        iconBg.className = "mx-auto p-5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl w-fit";
+        iconEl.setAttribute('data-lucide', 'sparkles');
+      } else {
+        const idx = Math.floor(Math.random() * MENSAJES_DESCANSO_SALIDA.length);
+        fraseElegida = MENSAJES_DESCANSO_SALIDA[idx];
+
+        titleEl.innerText = "¡Tiempo de Descanso / Salida!";
+        subtitleEl.innerText = "Mensaje de Descanso Laboral y Reconocimiento";
+        subtitleEl.className = "text-xs font-semibold uppercase tracking-wider text-amber-400";
+        iconBg.className = "mx-auto p-5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl w-fit";
+        iconEl.setAttribute('data-lucide', 'coffee');
+      }
+
+      msgEl.innerText = `"${fraseElegida}"`;
+      lucide.createIcons();
+
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('motivation-modal-box').classList.remove('scale-95');
+        document.getElementById('motivation-modal-box').classList.add('scale-100');
+      }, 10);
+    }
+
+    function cerrarModalMotivacion() {
+      const modal = document.getElementById('motivation-modal');
+      document.getElementById('motivation-modal-box').classList.remove('scale-100');
+      document.getElementById('motivation-modal-box').classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 200);
+    }
+
+    // =====================================================================
+    // LOGIN Y CONFIGURACIÓN DE EMPRESA Y TOLERANCIA CON DOBLE FACTOR
     // =====================================================================
     function actualizarTextosEmpresa() {
       const loginTitle = document.getElementById('login-company-display-name');
@@ -744,25 +897,87 @@
       if (inputTol) inputTol.value = toleranceMinutes;
     }
 
-    function validarLoginEmpresa(e) {
+    async function validarLoginEmpresa(e) {
       e.preventDefault();
       const passInput = document.getElementById('company-password-input');
-      const ingresada = passInput ? passInput.value.trim() : '';
+      const empSelect = document.getElementById('login-employee-select');
+      const empPinInput = document.getElementById('login-employee-pin-input');
 
-      if (ingresada === companyPassword) {
-        isCompanyLoggedIn = true;
-        document.getElementById('company-login-overlay').classList.add('hidden');
-        showToast('Bienvenido', `Acceso concedido a ${companyName}`, 'success');
-        if (passInput) passInput.value = '';
-      } else {
+      const ingresadaEmpresa = passInput ? passInput.value.trim() : '';
+      const selectedEmpId = empSelect ? empSelect.value : '';
+      const ingresadoPinEmp = empPinInput ? empPinInput.value.trim() : '';
+
+      if (ingresadaEmpresa !== companyPassword) {
         alert('Clave de acceso de la empresa incorrecta.');
         if (passInput) passInput.value = '';
+        return;
       }
+
+      if (!selectedEmpId) {
+        alert('Selecciona al colaborador que está ingresando.');
+        return;
+      }
+
+      const empObj = empleados.find(x => x.id === selectedEmpId);
+      if (!empObj) {
+        alert('Colaborador no encontrado.');
+        return;
+      }
+
+      if (empObj.pin && ingresadoPinEmp !== empObj.pin) {
+        alert('PIN de colaborador incorrecto.');
+        if (empPinInput) empPinInput.value = '';
+        return;
+      }
+
+      // LOGIN CORRECTO - ASENTAR EN HISTORIAL Y EXCEL
+      isCompanyLoggedIn = true;
+      activeLoggedInEmp = empObj;
+      document.getElementById('company-login-overlay').classList.add('hidden');
+
+      // Generar registro de Login de Empresa
+      const horaOficialNet = obtenerHoraActualCorregida();
+      const recordKey = `login_${horaOficialNet.getTime()}`;
+      const record = {
+        id: horaOficialNet.getTime(),
+        empId: empObj.id,
+        empName: empObj.name,
+        empDept: empObj.dept,
+        eventType: 'Login Empresa',
+        date: horaOficialNet.toISOString().split('T')[0],
+        time: horaOficialNet.toLocaleTimeString('es-MX', { hour12: true }),
+        location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 },
+        deviceToken: currentDeviceToken,
+        huellaVerificada: false,
+        observaciones: 'Acceso inicial a la app con clave general y PIN',
+        toleranciaStatus: { retardo: false, minutosDelay: 0, statusLabel: 'Acceso Permitido' },
+        timestamp: horaOficialNet.getTime()
+      };
+
+      if (historyRef) {
+        historyRef.child(recordKey).set(record);
+      }
+
+      historial.unshift(record);
+      localStorage.setItem('checkin_history', JSON.stringify(historial));
+
+      showToast('Acceso Correcto', `Bienvenido(a) ${empObj.name}. Sesión iniciada.`, 'success');
+      
+      // Auto-seleccionar al colaborador en la pantalla principal
+      selectedEmployeeId = empObj.id;
+      const searchInput = document.getElementById('employee-search-input');
+      if (searchInput) searchInput.value = `${empObj.name} (${empObj.id})`;
+      onSelectEmployee();
+
+      if (passInput) passInput.value = '';
+      if (empPinInput) empPinInput.value = '';
+      renderHistoryTable();
     }
 
     function cerrarSesionEmpresa() {
       if (confirm('¿Deseas cerrar la sesión de la empresa y bloquear la aplicación?')) {
         isCompanyLoggedIn = false;
+        activeLoggedInEmp = null;
         isAdminActive = false;
         document.getElementById('admin-section').classList.add('hidden');
         document.getElementById('btn-admin-text').innerText = 'Modo Administrador';
@@ -839,7 +1054,6 @@
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-      // Endpoint principal: WorldTimeAPI
       try {
         const response = await fetch('https://worldtimeapi.org/api/timezone/America/Mexico_City', {
           cache: 'no-store',
@@ -857,7 +1071,6 @@
         console.warn("Falló proveedor de tiempo principal (WorldTimeAPI):", err);
       }
 
-      // Proveedor Fallback 1: TimeAPI.io
       try {
         const controller2 = new AbortController();
         const timeoutId2 = setTimeout(() => controller2.abort(), 6000);
@@ -876,7 +1089,6 @@
         console.warn("Falló proveedor de tiempo secundario (TimeAPI):", err);
       }
 
-      // Proveedor Fallback 2: Servidor Firebase Realtime DB (.info/serverTimeOffset)
       try {
         if (db) {
           const offsetSnap = await db.ref('.info/serverTimeOffset').once('value');
@@ -889,7 +1101,6 @@
         console.warn("Falló verificación por Firebase ServerTimeOffset:", err);
       }
 
-      // Si todos los métodos fallan
       throw new Error("No se pudo obtener la hora verificada de Internet.");
     }
 
@@ -927,7 +1138,6 @@
     function conectarSincronizacionFirebase() {
       if (!db || !historyRef || !employeesRef) return;
 
-      // Sincronización de Historial
       historyRef.on('value', (snapshot) => {
         const val = snapshot.val();
         if (val) {
@@ -941,7 +1151,6 @@
         renderHoursTable();
       });
 
-      // Sincronización de Empleados
       employeesRef.on('value', (snapshot) => {
         const val = snapshot.val();
         if (val) {
@@ -956,7 +1165,6 @@
         renderHoursTable();
       });
 
-      // Sincronización en tiempo real de Configuración de Empresa y Horarios
       if (companyConfigRef) {
         companyConfigRef.on('value', (snapshot) => {
           const cfgVal = snapshot.val();
@@ -1024,15 +1232,15 @@
     }
 
     const MOTIVOS_GPS = {
-      1: "Permiso de ubicación denegado. En Chrome toca el candado junto a la dirección > Permisos > Ubicación > Permitir.",
-      2: "No se pudo determinar la ubicación. Activa el GPS del celular y sal a un lugar abierto.",
+      1: "Permiso de ubicación denegado. Permite la ubicación en los ajustes del navegador.",
+      2: "No se pudo determinar la ubicación. Activa el GPS del celular.",
       3: "Se agotó el tiempo de espera del GPS. Intenta de nuevo."
     };
     let ultimoErrorGPS = null;
 
     function mensajeErrorGPS() {
       if (!window.isSecureContext) {
-        return "Abre el enlace https:// directamente en Chrome. No funciona desde un archivo ni desde el visor de WhatsApp.";
+        return "Abre el enlace https:// directamente en Chrome.";
       }
       return MOTIVOS_GPS[ultimoErrorGPS] || "No se pudo obtener la ubicación.";
     }
@@ -1136,12 +1344,14 @@
     // =====================================================================
     function renderEmployeeSelect() {
       const faltaSelect = document.getElementById('falta-employee-select');
+      const loginEmpSelect = document.getElementById('login-employee-select');
+      
       const optionsHtml = '<option value="">-- Seleccione un colaborador --</option>' + 
         empleados.map(emp => `<option value="${emp.id}">${emp.id} - ${emp.name}</option>`).join('');
 
       if (faltaSelect) faltaSelect.innerHTML = optionsHtml;
+      if (loginEmpSelect) loginEmpSelect.innerHTML = optionsHtml;
 
-      // Auto-reconocimiento por dispositivo
       const matchedDeviceEmp = empleados.find(e => e.registeredDeviceToken === currentDeviceToken);
       if (matchedDeviceEmp && !selectedEmployeeId) {
         selectedEmployeeId = matchedDeviceEmp.id;
@@ -1158,8 +1368,6 @@
       if (!dropdown) return;
 
       const term = filterText.toLowerCase().trim();
-      const matchedDeviceEmp = empleados.find(e => e.registeredDeviceToken === currentDeviceToken);
-
       const filtered = empleados.filter(e => 
         e.name.toLowerCase().includes(term) || e.id.toLowerCase().includes(term) || e.dept.toLowerCase().includes(term)
       );
@@ -1230,7 +1438,6 @@
       onSelectEmployee();
     }
 
-    // Cerrar combobox si se hace clic fuera del buscador
     document.addEventListener('click', (e) => {
       const wrapper = document.getElementById('employee-combobox-wrapper');
       if (wrapper && !wrapper.contains(e.target)) {
@@ -1331,9 +1538,6 @@
       }
     }
 
-    // =====================================================================
-    // CÁLCULO DE TOLERANCIA Y EVALUACIÓN DE RETARDO DE ENTRADA
-    // =====================================================================
     function evaluarToleranciaEntrada(fechaObj) {
       if (!officialEntryTime) return { retardo: false, minutosDelay: 0, statusLabel: 'A Tiempo' };
 
@@ -1521,9 +1725,6 @@
       }
     }
 
-    // =====================================================================
-    // LÓGICA DE CÁLCULO DE HORAS TRABAJADAS (DÍA, SEMANA Y MES)
-    // =====================================================================
     function formatearMsAHorasMinutos(ms) {
       if (!ms || ms <= 0) return '0h 0m';
       const totalMinutos = Math.floor(ms / (1000 * 60));
@@ -1549,7 +1750,7 @@
 
     function calcularHorasTrabajadasPorDia(empId, fechaStr) {
       const marcasDelDia = historial
-        .filter(item => item.empId === empId && item.date === fechaStr)
+        .filter(item => item.empId === empId && item.date === fechaStr && item.eventType !== 'Login Empresa')
         .sort((a, b) => a.timestamp - b.timestamp);
 
       if (marcasDelDia.length === 0) return 0;
@@ -1585,7 +1786,7 @@
 
     function obtenerEstatusColaborador(empId) {
       const marcasDelEmpleado = historial
-        .filter(item => item.empId === empId)
+        .filter(item => item.empId === empId && item.eventType !== 'Login Empresa')
         .sort((a, b) => b.timestamp - a.timestamp);
 
       if (marcasDelEmpleado.length === 0) return { texto: 'Sin marcas', badge: 'bg-slate-700/50 text-slate-400 border-slate-600' };
@@ -1636,7 +1837,6 @@
         }
       });
 
-      // Conteo global de Retardos y Faltas
       const totalRetardos = historial.filter(h => h.empId === empId && h.eventType === 'Entrada' && h.toleranciaStatus && h.toleranciaStatus.retardo).length;
       const totalFaltas = historial.filter(h => h.empId === empId && h.eventType.includes('Falta')).length;
 
@@ -1682,7 +1882,7 @@
     }
 
     // =====================================================================
-    // REGISTRO DE ASISTENCIA CON TIEMPO DE RED VERIFICADO Y EVALUACIÓN DE TOLERANCIA
+    // REGISTRO DE ASISTENCIA CON MODAL DE MENSAJES OPTIMISTAS
     // =====================================================================
     async function registrarAsistencia() {
       if (!selectedEmployeeId || !selectedEventType) return;
@@ -1719,7 +1919,6 @@
         return;
       }
 
-      // VALIDACIÓN DE HORA OFICIAL DE RED OBLIGATORIA
       showToast('Verificando hora', 'Consultando hora oficial de Internet para evitar alteración del reloj...', 'info');
       let horaOficialNet;
 
@@ -1790,7 +1989,6 @@
         tolResult = evaluarToleranciaEntrada(horaOficialNet);
       }
       
-      // Objeto local para guardado inmediato
       const record = {
         id: horaOficialNet.getTime(),
         empId: emp.id,
@@ -1806,7 +2004,6 @@
         timestamp: horaOficialNet.getTime()
       };
 
-      // Objeto de envío a Firebase con sello ServerValue.TIMESTAMP
       const firebaseRecord = {
         ...record,
         timestamp: (firebase.database && firebase.database.ServerValue) ? firebase.database.ServerValue.TIMESTAMP : horaOficialNet.getTime()
@@ -1828,6 +2025,9 @@
 
       showToast(tolResult.retardo ? 'Entrada con Retardo' : '¡Registro Exitoso!', msgToast, tolResult.retardo ? 'error' : 'success');
 
+      // MOSTRAR VENTANA EMERGENTE CON MENSAJE ALEATORIO
+      mostrarModalMotivacion(selectedEventType);
+
       document.getElementById('employee-search-input').value = '';
       document.getElementById('employee-pin-input').value = '';
       document.getElementById('pin-input-container').classList.add('hidden');
@@ -1841,9 +2041,6 @@
       checkCanSubmit();
     }
 
-    // =====================================================================
-    // REGISTRO MANUAL DE FALTAS (PANEL ADMIN)
-    // =====================================================================
     function registrarFaltaManual(e) {
       e.preventDefault();
       const empId = document.getElementById('falta-employee-select')?.value;
@@ -1900,7 +2097,6 @@
         localStorage.setItem('checkin_history', JSON.stringify(historial));
 
         if (historyRef) {
-          // Buscar por ID si no tiene la key directa
           historyRef.once('value', (snap) => {
             const val = snap.val();
             if (val) {
@@ -1939,12 +2135,12 @@
 
       tbody.innerHTML = filtered.map(item => {
         let badgeColor = 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+        if (item.eventType === 'Login Empresa') badgeColor = 'bg-purple-500/20 text-purple-300 border-purple-500/30 font-bold';
         if (item.eventType === 'Entrada') badgeColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
         if (item.eventType === 'Salida Comer') badgeColor = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
         if (item.eventType === 'Salida') badgeColor = 'bg-rose-500/20 text-rose-300 border-rose-500/30';
         if (item.eventType.includes('Falta')) badgeColor = 'bg-red-900/60 text-red-200 border-red-500 font-bold';
 
-        // Badge de Tolerancia / Retardo
         let tolBadge = '<span class="text-slate-500">-</span>';
         if (item.eventType === 'Entrada' && item.toleranciaStatus) {
           if (item.toleranciaStatus.retardo) {
@@ -1954,6 +2150,8 @@
           }
         } else if (item.eventType.includes('Falta')) {
           tolBadge = `<span class="px-2 py-0.5 bg-red-950/80 text-red-400 border border-red-600 rounded text-[11px] font-bold">FALTA REGISTRADA</span>`;
+        } else if (item.eventType === 'Login Empresa') {
+          tolBadge = `<span class="px-2 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded text-[11px] font-bold">Acceso a Sistema</span>`;
         }
 
         const hasGps = item.location && item.location.lat !== 'N/A';
@@ -2005,7 +2203,7 @@
       renderHistoryTable();
     }
 
-    // EXPORTACIÓN COMPLETA A EXCEL INCLUYENDO FALTAS, RETARDOS Y HORAS
+    // EXPORTACIÓN COMPLETA A EXCEL INCLUYENDO LOGINS DE EMPRESA, FALTAS, RETARDOS Y HORAS
     function exportToExcel() {
       if (historial.length === 0 && empleados.length === 0) {
         alert('No hay información registrada para exportar.');
@@ -2014,7 +2212,6 @@
 
       const workbook = XLSX.utils.book_new();
 
-      // 1. PESTAÑA: HISTORIAL DE ASISTENCIA CON DETALLE DE RETARDOS Y FALTAS
       if (historial.length > 0) {
         const historyExcelData = historial.map(item => {
           const hasGps = item.location && item.location.lat !== 'N/A';
@@ -2066,7 +2263,6 @@
         XLSX.utils.book_append_sheet(workbook, wsHistory, 'Historial de Asistencia');
       }
 
-      // 2. PESTAÑA: RESUMEN GENERAL DE HORAS, RETARDOS Y FALTAS POR EMPLEADO
       if (empleados.length > 0) {
         const hoursExcelData = empleados.map(emp => {
           const estatus = obtenerEstatusColaborador(emp.id);
@@ -2095,7 +2291,7 @@
 
       const today = obtenerHoraActualCorregida().toISOString().split('T')[0];
       XLSX.writeFile(workbook, `Reporte_Asistencia_Tolerancia_Faltas_${today}.xlsx`);
-      showToast('Excel Generado', 'Reporte exportado con tolerancias, retardos y faltas incluidas.', 'success');
+      showToast('Excel Generado', 'Reporte exportado con tolerancias, retardos y logins incluidos.', 'success');
     }
 
     function renderEmployeesTable() {
@@ -2316,6 +2512,30 @@
       renderEmployeesTable();
       renderHoursTable();
       showToast('Eliminado', 'Colaborador removido de la lista.', 'info');
+    }
+
+    function desvincularDispositivo(empId) {
+      if (confirm('¿Deseas desvincular el celular/equipo de este colaborador para que pueda asociar uno nuevo?')) {
+        const emp = empleados.find(e => e.id === empId);
+        if (emp) {
+          emp.registeredDeviceToken = null;
+          emp.credId = null;
+          emp.credPubKey = null;
+          emp.credAlg = null;
+
+          localStorage.setItem('checkin_employees', JSON.stringify(empleados));
+          if (employeesRef) {
+            employeesRef.child(empId.replace(/[^a-zA-Z0-9]/g, '_')).update({
+              registeredDeviceToken: null,
+              credId: null,
+              credPubKey: null,
+              credAlg: null
+            });
+          }
+          renderEmployeesTable();
+          showToast('Desvinculado', 'Dispositivo desasociado.', 'info');
+        }
+      }
     }
 
     function cambiarPinAdmin() {
