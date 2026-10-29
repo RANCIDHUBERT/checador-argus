@@ -2123,15 +2123,8 @@
       const htmlOriginal = btn ? btn.innerHTML : '';
       if (btn) btn.innerHTML = '<span class="animate-pulse">Registrando...</span>';
       try {
-        await registrarAsistenciaInterno();
-      } finally {
-        registrandoAhora = false;
-        if (btn) { btn.innerHTML = htmlOriginal; if (window.lucide) lucide.createIcons(); }
-        checkCanSubmit();
-      }
-    }
 
-    async function registrarAsistenciaInterno() {
+async function registrarAsistenciaInterno() {
       if (!selectedEmployeeId || !selectedEventType) return;
 
       const btnSubmit = document.getElementById('btn-submit-checkin');
@@ -2210,37 +2203,40 @@
       }
 
       try {
-        // LLAMADA SEGURA A LA CLOUD FUNCTION DESPLEGADA
         const registrarAsistenciaSegura = firebase.functions().httpsCallable('registrarAsistenciaSegura');
         
-    
-        
-        // Enviamos los nombres de parámetros exactos que espera el servidor
-        const respuesta = await registrarAsistenciaSegura({
+        // Enviamos múltiples variantes de nombres para asegurar compatibilidad total con el servidor
+        const payloadData = {
           empleadoId: emp.id,
+          empId: emp.id,
+          id: emp.id,
           tipo: selectedEventType,
+          eventType: selectedEventType,
+          tipoEvento: selectedEventType,
           pin: pinVal,
           deviceToken: currentDeviceToken,
+          token: currentDeviceToken,
           location: currentLocation ? { 
             lat: String(currentLocation.lat), 
             lng: String(currentLocation.lng), 
             accuracy: Number(currentLocation.accuracy) 
           } : { lat: 'N/A', lng: 'N/A', accuracy: 0 }
-        });
+        };
 
-        const record = respuesta.data.record;
+        const respuesta = await registrarAsistenciaSegura(payloadData);
+
+        const record = respuesta.data.record || respuesta.data;
         let tolResult = record.toleranciaStatus || { retardo: false, minutosDelay: 0, statusLabel: 'N/A' };
 
         playSuccessSound();
 
-        let msgToast = `${selectedEventType} confirmada para ${emp.name} a las ${record.time}`;
+        let msgToast = `${selectedEventType} confirmada para ${emp.name} a las ${record.time || 'ahora'}`;
         if (selectedEventType === 'Entrada' && tolResult.retardo) {
           msgToast += ` (REGISTRADO CON RETARDO: +${tolResult.minutosDelay} min)`;
         }
 
         showToast(tolResult.retardo ? 'Entrada con Retardo' : '¡Registro Exitoso!', msgToast, tolResult.retardo ? 'error' : 'success');
 
-        // Mostrar modal animado
         mostrarModalMotivacion(selectedEventType);
 
         selectedEventType = '';
@@ -2262,7 +2258,7 @@
         checkCanSubmit();
       }
     }
-
+   
     function registrarFaltaManual(e) {
       e.preventDefault();
       const empId = document.getElementById('falta-employee-select')?.value;
