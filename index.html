@@ -105,6 +105,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- SDK de Cloud Functions -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -2111,7 +2113,7 @@
     }
 
     // =====================================================================
-    // REGISTRO DE ASISTENCIA RÁPIDO
+    // REGISTRO DE ASISTENCIA RÁPIDO (MODIFICADO PARA USAR CLOUD FUNCTION SEGURA)
     // =====================================================================
     let registrandoAhora = false;
     async function registrarAsistencia() {
@@ -2152,21 +2154,6 @@
 
       if (emp.registeredDeviceToken && emp.registeredDeviceToken !== currentDeviceToken) {
         showToast('Dispositivo No Autorizado', 'Solo puedes registrar asistencia desde tu propio celular.', 'error');
-        document.getElementById('employee-pin-input').value = '';
-        checkCanSubmit();
-        return;
-      }
-
-      let horaOficialNet;
-
-      try {
-        horaOficialNet = await obtenerHoraServidor();
-        serverTimeOffsetMs = horaOficialNet.getTime() - Date.now();
-        isServerTimeSynced = true;
-      } catch (errNet) {
-        console.error("Error validando hora de red:", errNet);
-        showToast('Error de hora de Internet', 'No se pudo verificar la hora real de la red. Conéctate a Internet y reintenta.', 'error');
-        alert('⚠️ ACCESO BLOQUEADO: No se pudo verificar la hora exacta de Internet. Asegúrate de tener conexión a red activa.');
         document.getElementById('employee-pin-input').value = '';
         checkCanSubmit();
         return;
@@ -2222,65 +2209,51 @@
         }
       }
 
-      const recordKey = `rec_${horaOficialNet.getTime()}`;
-      let tolResult = { retardo: false, minutosDelay: 0, statusLabel: 'N/A' };
+      try {
+        // LLAMADA SEGURA A LA CLOUD FUNCTION DESPLEGADA
+        const registrarAsistenciaSegura = firebase.functions().httpsCallable('registrarAsistenciaSegura');
+        
+        const respuesta = await registrarAsistenciaSegura({
+          empleadoId: emp.id,
+          tipo: selectedEventType,
+          pin: pinVal,
+          deviceToken: currentDeviceToken,
+          location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 }
+        });
 
-      if (selectedEventType === 'Entrada') {
-        tolResult = evaluarToleranciaEntrada(horaOficialNet);
+        const record = respuesta.data.record;
+        let tolResult = record.toleranciaStatus || { retardo: false, minutosDelay: 0, statusLabel: 'N/A' };
+
+        playSuccessSound();
+
+        let msgToast = `${selectedEventType} confirmada para ${emp.name} a las ${record.time}`;
+        if (selectedEventType === 'Entrada' && tolResult.retardo) {
+          msgToast += ` (REGISTRADO CON RETARDO: +${tolResult.minutosDelay} min)`;
+        }
+
+        showToast(tolResult.retardo ? 'Entrada con Retardo' : '¡Registro Exitoso!', msgToast, tolResult.retardo ? 'error' : 'success');
+
+        // Mostrar modal animado
+        mostrarModalMotivacion(selectedEventType);
+
+        selectedEventType = '';
+        selectedEmployeeId = '';
+
+        document.getElementById('employee-search-input').value = '';
+        document.getElementById('employee-pin-input').value = '';
+        document.getElementById('pin-input-container').classList.add('hidden');
+        document.querySelectorAll('.event-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-slate-700/80', 'ring-2', 'ring-blue-500/50'));
+        
+        renderEmployeeSelect();
+        onSelectEmployee();
+        renderHistoryTable();
+        renderHoursTable();
+      } catch (error) {
+        console.error("Error en Cloud Function:", error);
+        alert("Aviso de seguridad del servidor: " + (error.message || error));
+      } finally {
+        checkCanSubmit();
       }
-      
-      const record = {
-        id: horaOficialNet.getTime(),
-        empId: emp.id,
-        empName: emp.name,
-        empDept: emp.dept,
-        eventType: selectedEventType,
-        date: horaOficialNet.toISOString().split('T')[0],
-        time: horaOficialNet.toLocaleTimeString('es-MX', { hour12: true }),
-        location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 },
-        deviceToken: currentDeviceToken,
-        huellaVerificada: true,
-        toleranciaStatus: tolResult,
-        timestamp: horaOficialNet.getTime()
-      };
-
-      const firebaseRecord = {
-        ...record,
-        timestamp: (firebase.database && firebase.database.ServerValue) ? firebase.database.ServerValue.TIMESTAMP : horaOficialNet.getTime()
-      };
-
-      if (historyRef) {
-        historyRef.child(recordKey).set(firebaseRecord);
-      }
-
-      historial.unshift(record);
-      localStorage.setItem('checkin_history', JSON.stringify(historial));
-
-      playSuccessSound();
-
-      let msgToast = `${selectedEventType} confirmada para ${emp.name} a las ${record.time}`;
-      if (selectedEventType === 'Entrada' && tolResult.retardo) {
-        msgToast += ` (REGISTRADO CON RETARDO: +${tolResult.minutosDelay} min)`;
-      }
-
-      showToast(tolResult.retardo ? 'Entrada con Retardo' : '¡Registro Exitoso!', msgToast, tolResult.retardo ? 'error' : 'success');
-
-      // Mostrar modal animado
-      mostrarModalMotivacion(selectedEventType);
-
-      selectedEventType = '';
-      selectedEmployeeId = '';
-
-      document.getElementById('employee-search-input').value = '';
-      document.getElementById('employee-pin-input').value = '';
-      document.getElementById('pin-input-container').classList.add('hidden');
-      document.querySelectorAll('.event-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-slate-700/80', 'ring-2', 'ring-blue-500/50'));
-      
-      renderEmployeeSelect();
-      onSelectEmployee();
-      renderHistoryTable();
-      renderHoursTable();
-      checkCanSubmit();
     }
 
     function registrarFaltaManual(e) {
