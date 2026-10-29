@@ -2213,12 +2213,19 @@
         // LLAMADA SEGURA A LA CLOUD FUNCTION DESPLEGADA
         const registrarAsistenciaSegura = firebase.functions().httpsCallable('registrarAsistenciaSegura');
         
+    
+        
+        // Enviamos los nombres de parámetros exactos que espera el servidor
         const respuesta = await registrarAsistenciaSegura({
           empleadoId: emp.id,
           tipo: selectedEventType,
           pin: pinVal,
           deviceToken: currentDeviceToken,
-          location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 }
+          location: currentLocation ? { 
+            lat: String(currentLocation.lat), 
+            lng: String(currentLocation.lng), 
+            accuracy: Number(currentLocation.accuracy) 
+          } : { lat: 'N/A', lng: 'N/A', accuracy: 0 }
         });
 
         const record = respuesta.data.record;
