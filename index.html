@@ -7,8 +7,97 @@
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+  <!-- Íconos integrados (estilo Lucide) - NO dependen de ningún CDN externo -->
+  <script>
+  (function () {
+    var P = function (d) { return '<path d="' + d + '"/>'; };
+    var C = function (x, y, r) { return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '"/>'; };
+    var L = function (a, b, c, d) { return '<line x1="' + a + '" y1="' + b + '" x2="' + c + '" y2="' + d + '"/>'; };
+    var PL = function (p) { return '<polyline points="' + p + '"/>'; };
+    var R = function (x, y, w, h, rx) { return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '"/>'; };
+    var USER = 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2';
+    var ICONS = {
+      'alarm-clock': C(12,13,8) + P('M12 9v4l2 2') + P('M5 3 2 6') + P('m22 6-3-3') + P('M6.38 18.7 4 21') + P('M17.64 18.67 20 21'),
+      'alert-circle': C(12,12,10) + L(12,8,12,12) + L(12,16,12.01,16),
+      'alert-triangle': P('m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3') + P('M12 9v4') + P('M12 17h.01'),
+      'bar-chart-3': P('M3 3v18h18') + P('M18 17V9') + P('M13 17V5') + P('M8 17v-3'),
+      'building-2': P('M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z') + P('M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2') + P('M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2') + P('M10 6h4') + P('M10 10h4') + P('M10 14h4') + P('M10 18h4'),
+      'camera': P('M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z') + C(12,13,3),
+      'check': P('M20 6 9 17l-5-5'),
+      'check-circle': P('M22 11.08V12a10 10 0 1 1-5.93-9.14') + P('m9 11 3 3L22 4'),
+      'check-square': P('m9 11 3 3L22 4') + P('M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'),
+      'chevron-down': P('m6 9 6 6 6-6'),
+      'clock': C(12,12,10) + PL('12 6 12 12 16 14'),
+      'clock-4': C(12,12,10) + PL('12 6 12 12 16 14'),
+      'cloud-lightning': P('M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973') + P('m13 12-3 5h4l-3 5'),
+      'coffee': P('M17 8h1a4 4 0 1 1 0 8h-1') + P('M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z') + L(6,2,6,4) + L(10,2,10,4) + L(14,2,14,4),
+      'database': '<ellipse cx="12" cy="5" rx="9" ry="3"/>' + P('M3 5V19A9 3 0 0 0 21 19V5') + P('M3 12A9 3 0 0 0 21 12'),
+      'edit': P('M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7') + P('M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z'),
+      'edit-3': P('M12 20h9') + P('M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z'),
+      'file-spreadsheet': P('M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z') + PL('14 2 14 8 20 8') + P('M8 13h2') + P('M14 13h2') + P('M8 17h2') + P('M14 17h2'),
+      'fingerprint': P('M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4') + P('M5 19.5C5.5 18 6 15 6 12c0-.7.12-1.37.34-2') + P('M17.29 21.02c.12-.6.43-2.3.5-3.02') + P('M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4') + P('M8.65 22c.21-.66.45-1.32.57-2') + P('M14 13.12c0 2.38 0 6.38-1 8.88') + P('M2 16h.01') + P('M21.8 16c.2-2 .131-5.354 0-6') + P('M9 6.8a6 6 0 0 1 9 5.2c0 .47 0 1.17-.02 2'),
+      'image': R(3,3,18,18,2) + C(9,9,2) + P('m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'),
+      'info': C(12,12,10) + P('M12 16v-4') + P('M12 8h.01'),
+      'key': P('m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4'),
+      'lock': R(3,11,18,11,2) + P('M7 11V7a5 5 0 0 1 10 0v4'),
+      'log-in': P('M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4') + PL('10 17 15 12 10 7') + L(15,12,3,12),
+      'log-out': P('M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4') + PL('16 17 21 12 16 7') + L(21,12,9,12),
+      'map-pin': P('M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z') + C(12,10,3),
+      'power': P('M18.36 6.64a9 9 0 1 1-12.73 0') + L(12,2,12,12),
+      'refresh-cw': P('M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8') + P('M21 3v5h-5') + P('M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16') + P('M8 16H3v5'),
+      'rotate-ccw': P('M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8') + P('M3 3v5h5'),
+      'save': P('M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z') + PL('17 21 17 13 7 13 7 21') + PL('7 3 7 8 15 8'),
+      'search': C(11,11,8) + P('m21 21-4.3-4.3'),
+      'settings': P('M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z') + C(12,12,3),
+      'smartphone': R(5,2,14,20,2) + P('M12 18h.01'),
+      'smartphone-charging': R(5,2,14,20,2) + P('M12.667 8 10 12h4l-2.667 4'),
+      'smartphone-nfc': R(2,6,8,12,1) + P('M6 14h.01') + P('M14 8a6 6 0 0 1 0 8') + P('M18 5a10 10 0 0 1 0 14'),
+      'sparkles': P('m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z') + P('M5 3v4') + P('M19 17v4') + P('M3 5h4') + P('M17 19h4'),
+      'timer': L(10,2,14,2) + L(12,14,15,11) + C(12,14,8),
+      'trash-2': P('M3 6h18') + P('M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6') + P('M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2') + L(10,11,10,17) + L(14,11,14,17),
+      'upload': P('M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4') + PL('17 8 12 3 7 8') + L(12,3,12,15),
+      'user': P('M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2') + C(12,7,4),
+      'user-check': P(USER) + C(9,7,4) + PL('16 11 18 13 22 9'),
+      'user-plus': P(USER) + C(9,7,4) + L(19,8,19,14) + L(22,11,16,11),
+      'user-x': P(USER) + C(9,7,4) + L(17,8,22,13) + L(22,8,17,13),
+      'utensils': P('M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2') + P('M7 2v20') + P('M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7'),
+      'wifi': P('M5 13a10 10 0 0 1 14 0') + P('M8.5 16.5a5 5 0 0 1 7 0') + P('M2 8.82a15 15 0 0 1 20 0') + L(12,20,12.01,20)
+    };
+    var NS = 'http://www.w3.org/2000/svg';
+    window.lucide = {
+      icons: ICONS,
+      createIcons: function () {
+        var els = document.querySelectorAll('[data-lucide]');
+        for (var i = 0; i < els.length; i++) {
+          var el = els[i];
+          var name = el.getAttribute('data-lucide');
+          if (el.namespaceURI === NS && el.getAttribute('data-rendered') === name) continue;
+          var inner = ICONS[name];
+          if (!inner) continue;
+          var svg = document.createElementNS(NS, 'svg');
+          for (var j = 0; j < el.attributes.length; j++) {
+            var a = el.attributes[j];
+            if (a.name === 'class') continue;
+            svg.setAttribute(a.name, a.value);
+          }
+          svg.setAttribute('xmlns', NS);
+          svg.setAttribute('width', '24');
+          svg.setAttribute('height', '24');
+          svg.setAttribute('viewBox', '0 0 24 24');
+          svg.setAttribute('fill', 'none');
+          svg.setAttribute('stroke', 'currentColor');
+          svg.setAttribute('stroke-width', '2');
+          svg.setAttribute('stroke-linecap', 'round');
+          svg.setAttribute('stroke-linejoin', 'round');
+          svg.setAttribute('data-rendered', name);
+          svg.setAttribute('class', ('lucide lucide-' + name + ' ' + (el.getAttribute('class') || '')).trim());
+          svg.innerHTML = inner;
+          if (el.parentNode) el.parentNode.replaceChild(svg, el);
+        }
+      }
+    };
+  })();
+  </script>
   <!-- SheetJS para exportar a Excel REAL (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
