@@ -870,7 +870,7 @@
         try {
           const val = snapshot.val();
           if (val) {
-            empleados = Object.values(val);
+            empleados = Object.entries(val).map(([k, v]) => Object.assign({}, v, { _key: k }));
             localStorage.setItem('checkin_employees', JSON.stringify(empleados));
           } else {
             empleados = [];
@@ -2616,7 +2616,23 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    function guardarEmpleado(e) {
+    // Verifica que haya sesión de administrador activa en Firebase antes de escribir
+    function verificarAdminFirebase() {
+      if (!auth || !auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+        showToast('Sesión de administrador requerida', 'Sal de Modo Administrador y vuelve a entrar con tu correo y contraseña.', 'error');
+        return false;
+      }
+      return true;
+    }
+
+    function mensajeErrorFirebase(err) {
+      if (err && (err.code === 'PERMISSION_DENIED' || /permission_denied/i.test(err.message || ''))) {
+        return 'Firebase rechazó el cambio (PERMISSION_DENIED). Revisa las Reglas de Realtime Database y que tu UID de administrador sea el correcto.';
+      }
+      return (err && err.message) ? err.message : 'Error desconocido al guardar en la nube.';
+    }
+
+    async function guardarEmpleado(e) {
       e.preventDefault();
       const editIndex = parseInt(document.getElementById('emp-edit-index').value);
       const id = document.getElementById('emp-id').value.trim();
@@ -2635,6 +2651,8 @@
         return;
       }
 
+      if (!verificarAdminFirebase()) return;
+
       const existingEmp = editIndex >= 0 ? empleados[editIndex] : null;
       const empData = { 
         id, 
@@ -2648,27 +2666,39 @@
         credAlg: existingEmp ? (existingEmp.credAlg || null) : null
       };
 
+      if (editIndex < 0 && empleados.some(emp => emp.id === id)) {
+        alert('Ya existe un colaborador con este mismo ID.');
+        return;
+      }
+
+      const newKey = id.replace(/[^a-zA-Z0-9]/g, '_');
+      const oldKey = existingEmp ? (existingEmp._key || existingEmp.id.replace(/[^a-zA-Z0-9]/g, '_')) : null;
+      const btn = document.getElementById('btn-save-emp');
+      const btnTextoOriginal = btn ? btn.innerText : '';
+      if (btn) { btn.disabled = true; btn.innerText = 'Guardando...'; }
+
+      try {
+        if (!employeesRef) throw new Error('La base de datos no está conectada.');
+        await employeesRef.child(newKey).set(empData);
+        // Si cambió el ID al editar, se elimina el registro anterior
+        if (oldKey && oldKey !== newKey) {
+          await employeesRef.child(oldKey).remove();
+        }
+      } catch (err) {
+        console.error('Error al guardar empleado:', err);
+        showToast('No se pudo guardar', mensajeErrorFirebase(err), 'error');
+        if (btn) { btn.disabled = false; btn.innerText = btnTextoOriginal; }
+        return;
+      }
+
+      if (btn) { btn.disabled = false; }
       if (editIndex >= 0) {
-        empleados[editIndex] = empData;
         showToast('Empleado Actualizado', `Datos, foto y PIN de ${name} corregidos.`, 'success');
       } else {
-        if (empleados.some(emp => emp.id === id)) {
-          alert('Ya existe un colaborador con este mismo ID.');
-          return;
-        }
-        empleados.push(empData);
         showToast('Colaborador Registrado', `${name} guardado con su fotografía y PIN.`, 'success');
       }
 
-      localStorage.setItem('checkin_employees', JSON.stringify(empleados));
-      if (employeesRef) {
-        employeesRef.child(id.replace(/[^a-zA-Z0-9]/g, '_')).set(empData);
-      }
-
       resetFormEmpleado();
-      renderEmployeeSelect();
-      renderEmployeesTable();
-      renderHoursTable();
     }
 
     function prepararEdicionEmpleado(index) {
@@ -2720,15 +2750,35 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    function eliminarEmpleado(empId) {
-      empleados = empleados.filter(e => e.id !== empId);
-      localStorage.setItem('checkin_employees', JSON.stringify(empleados));
-      if (employeesRef) {
-        employeesRef.child(empId.replace(/[^a-zA-Z0-9]/g, '_')).remove();
+    async function eliminarEmpleado(empId) {
+      const emp = empleados.find(e => e.id === empId);
+      const nombre = emp ? emp.name : empId;
+      if (!confirm(`¿Seguro que deseas eliminar a ${nombre}? Esta acción lo borra también de la nube.`)) return;
+      if (!verificarAdminFirebase()) return;
+
+      try {
+        if (!employeesRef) throw new Error('La base de datos no está conectada.');
+        const llaves = new Set();
+        if (emp && emp._key) llaves.add(emp._key);
+        llaves.add(String(empId).replace(/[^a-zA-Z0-9]/g, '_'));
+
+        // También se busca por el campo "id" para borrar sin importar cómo se guardó la llave
+        const snap = await employeesRef.once('value');
+        const val = snap.val() || {};
+        Object.keys(val).forEach(k => {
+          if (val[k] && val[k].id === empId) llaves.add(k);
+        });
+
+        const updates = {};
+        llaves.forEach(k => { updates[k] = null; });
+        await employeesRef.update(updates);
+      } catch (err) {
+        console.error('Error al eliminar empleado:', err);
+        showToast('No se pudo eliminar', mensajeErrorFirebase(err), 'error');
+        return;
       }
-      renderEmployeeSelect();
-      renderEmployeesTable();
-      renderHoursTable();
+
+      // La lista se refresca sola cuando Firebase confirma el cambio
       showToast('Eliminado', 'Colaborador removido de la lista.', 'info');
     }
 
@@ -2743,7 +2793,7 @@
 
           localStorage.setItem('checkin_employees', JSON.stringify(empleados));
           if (employeesRef) {
-            employeesRef.child(empId.replace(/[^a-zA-Z0-9]/g, '_')).update({
+            employeesRef.child(emp._key || empId.replace(/[^a-zA-Z0-9]/g, '_')).update({
               registeredDeviceToken: null,
               credId: null,
               credPubKey: null,
