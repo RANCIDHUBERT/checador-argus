@@ -2224,16 +2224,17 @@
       }
 
       try {
-        // LLAMADA SEGURA A LA CLOUD FUNCTION DESPLEGADA
+// LLAMADA SEGURA A LA CLOUD FUNCTION DESPLEGADA
         const registrarAsistenciaSegura = firebase.functions().httpsCallable('registrarAsistenciaSegura');
         
         const respuesta = await registrarAsistenciaSegura({
-          empId: emp.id,
-          eventType: selectedEventType,
+          empleadoId: emp.id,
+          tipo: selectedEventType,
           pin: pinVal,
           deviceToken: currentDeviceToken,
           location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 }
         });
+ 
 
         const record = respuesta.data.record;
         let tolResult = record.toleranciaStatus || { retardo: false, minutosDelay: 0, statusLabel: 'N/A' };
