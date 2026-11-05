@@ -2228,8 +2228,8 @@
         const registrarAsistenciaSegura = firebase.functions().httpsCallable('registrarAsistenciaSegura');
         
         const respuesta = await registrarAsistenciaSegura({
-          empleadoId: emp.id,
-          tipo: selectedEventType,
+          empId: emp.id,
+          eventType: selectedEventType,
           pin: pinVal,
           deviceToken: currentDeviceToken,
           location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 }
