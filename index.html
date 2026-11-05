@@ -870,7 +870,14 @@
         try {
           const val = snapshot.val();
           if (val) {
-            empleados = Object.entries(val).map(([k, v]) => Object.assign({}, v, { _key: k }));
+            empleados = Object.entries(val)
+              .filter(([k, v]) => v && typeof v === 'object')
+              .map(([k, v]) => Object.assign({}, v, {
+                _key: k,
+                // Firebase guarda como número lo que se escribe sin comillas en la consola; se normaliza a texto
+                id: v.id != null ? String(v.id) : v.id,
+                pin: v.pin != null ? String(v.pin) : v.pin
+              }));
             localStorage.setItem('checkin_employees', JSON.stringify(empleados));
           } else {
             empleados = [];
@@ -1001,43 +1008,50 @@
     let isServerTimeSynced = false;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      if (window.lucide) {
-        lucide.createIcons();
-      }
-      
-      // Autenticar (anónimo) y luego conectar listeners de Firebase
-      await asegurarSesionAnonima();
-      conectarSincronizacionFirebase();
+      // Cada paso va protegido: si uno falla o tarda, el resto de la página sigue funcionando
+      const seguro = (fn) => { try { return fn(); } catch (e) { console.error('Error en el arranque:', e); } };
 
-      // Sincronizar hora de red al arrancar
-      await sincronizarHoraRedSilencioso();
-      
-      updateClock();
-      setInterval(updateClock, 1000);
-      
+      // 1) Lo que NO depende de internet se muestra de inmediato
+      seguro(() => { if (window.lucide) lucide.createIcons(); });
+
+      seguro(() => {
+        const cfgInput = document.getElementById('cfg-firebase-url');
+        if (cfgInput) cfgInput.value = FIREBASE_URL;
+      });
+      seguro(() => {
+        const deviceEl = document.getElementById('device-token-text');
+        if (deviceEl) deviceEl.innerText = `ID Equipo: ${currentDeviceToken}`;
+      });
+
+      seguro(updateClock);
+      setInterval(() => seguro(updateClock), 1000);
+
+      seguro(renderEmployeeSelect);
+      seguro(renderEmployeesTable);
+      seguro(renderHistoryTable);
+      seguro(renderHoursTable);
+      seguro(bloquearAtajosTeclado);
+      seguro(iniciarGPSContinuo);
+      seguro(actualizarTextosEmpresa);
+      seguro(actualizarBadgeHorario);
+
+      const poneFechaFalta = () => seguro(() => {
+        const hoyStr = obtenerHoraActualCorregida().toISOString().split('T')[0];
+        const fechaFaltaEl = document.getElementById('falta-date-input');
+        if (fechaFaltaEl) fechaFaltaEl.value = hoyStr;
+      });
+      poneFechaFalta();
+
+      // 2) Lo que depende de internet va después y no bloquea lo anterior
+      try { await asegurarSesionAnonima(); } catch (e) { console.error('Error de sesión anónima:', e); }
+      seguro(conectarSincronizacionFirebase);
+
+      try { await sincronizarHoraRedSilencioso(); } catch (e) { console.error('Error al sincronizar hora:', e); }
+      seguro(updateClock);
+      poneFechaFalta();
+
       // Resincronizar hora cada 5 minutos
       setInterval(sincronizarHoraRedSilencioso, 300000);
-
-      renderEmployeeSelect();
-      renderEmployeesTable();
-      renderHistoryTable();
-      renderHoursTable();
-      bloquearAtajosTeclado();
-      iniciarGPSContinuo();
-
-      const cfgInput = document.getElementById('cfg-firebase-url');
-      if (cfgInput) cfgInput.value = FIREBASE_URL;
-
-      const deviceEl = document.getElementById('device-token-text');
-      if (deviceEl) deviceEl.innerText = `ID Equipo: ${currentDeviceToken}`;
-
-      actualizarTextosEmpresa();
-      actualizarBadgeHorario();
-
-      // Inicializar fecha de falta por defecto
-      const hoyStr = obtenerHoraActualCorregida().toISOString().split('T')[0];
-      const fechaFaltaEl = document.getElementById('falta-date-input');
-      if (fechaFaltaEl) fechaFaltaEl.value = hoyStr;
     });
 
     // =====================================================================
