@@ -783,8 +783,10 @@
     // >>> COMPLETA ESTOS DOS DATOS (Firebase Console > Configuración del proyecto) <<<
     // La apiKey de Firebase es pública por diseño; lo que protege tus datos son las REGLAS.
     const FIREBASE_API_KEY = "AIzaSyCHJySdiXmkrkrJKb5v_CjCu64ZJib-yio";
-    // UID del usuario administrador (Firebase Console > Authentication > Usuarios).
-    const ADMIN_UID = "2FRs63Ayx2QmNmUplpd2pObt8NC3";
+    // Los administradores ya NO están fijos en el código: se guardan en la base de datos,
+    // en el nodo /admins/<UID> = true (Firebase Console > Realtime Database > Datos).
+    // Aquí solo se recuerda el UID del admin que acaba de iniciar sesión (ya verificado).
+    let adminUidVerificado = null;
 
     let defaultFirebaseConfig = {
       apiKey: FIREBASE_API_KEY,
@@ -1221,6 +1223,7 @@
         isCompanyLoggedIn = false;
         activeLoggedInEmp = null;
         isAdminActive = false;
+        adminUidVerificado = null;
         document.getElementById('admin-section').classList.add('hidden');
         document.getElementById('btn-admin-text').innerText = 'Modo Administrador';
         document.getElementById('company-login-overlay').classList.remove('hidden');
@@ -1523,6 +1526,7 @@
 
     async function cerrarSesionAdmin() {
       isAdminActive = false;
+      adminUidVerificado = null;
       document.getElementById('admin-section').classList.add('hidden');
       document.getElementById('btn-admin-text').innerText = 'Modo Administrador';
       try {
@@ -1541,34 +1545,60 @@
       const email = document.getElementById('admin-email-input').value.trim();
       const pass = document.getElementById('admin-pass-input').value;
 
-      if (!auth) {
-        alert('Firebase Authentication no está disponible.');
-        return;
-      }
-      if (ADMIN_UID.startsWith('PEGA_')) {
-        alert('Falta configurar ADMIN_UID en el código (ver instrucciones).');
+      if (!auth || !db) {
+        alert('Firebase no está disponible.');
         return;
       }
 
+      // 1) Correo y contraseña
+      let cred;
       try {
-        const cred = await auth.signInWithEmailAndPassword(email, pass);
-        if (cred.user.uid !== ADMIN_UID) {
-          await auth.signOut();
-          await auth.signInAnonymously();
-          alert('Esta cuenta no tiene permisos de administrador.');
-          return;
-        }
-        cerrarModalAdminLogin();
-        isAdminActive = true;
-        document.getElementById('admin-section').classList.remove('hidden');
-        document.getElementById('btn-admin-text').innerText = 'Salir de Admin';
-        showToast('Acceso Concedido', 'Bienvenido al panel de administración.', 'success');
+        cred = await auth.signInWithEmailAndPassword(email, pass);
       } catch (err) {
-        console.warn('Login admin falló:', err && err.code);
-        alert('Correo o contraseña incorrectos.');
+        const code = (err && err.code) || '';
+        console.warn('Login admin falló:', code);
+        let msg = 'Correo o contraseña incorrectos.';
+        if (code === 'auth/too-many-requests') {
+          msg = 'Demasiados intentos fallidos. Espera unos minutos e inténtalo de nuevo.';
+        } else if (code === 'auth/network-request-failed') {
+          msg = 'Sin conexión con Firebase. Revisa tu internet e inténtalo de nuevo.';
+        } else if (!/^auth\/(invalid-credential|wrong-password|user-not-found|invalid-email|user-disabled)$/.test(code)) {
+          msg = 'No se pudo iniciar sesión (código: ' + (code || 'desconocido') + ').';
+        }
+        alert(msg);
         document.getElementById('admin-pass-input').value = '';
         try { if (auth && !auth.currentUser) await auth.signInAnonymously(); } catch (_) {}
+        return;
       }
+
+      // 2) Verificar en la base de datos que este UID sea administrador: /admins/<UID> = true
+      let esAdmin = false;
+      try {
+        const snap = await db.ref('admins/' + cred.user.uid).once('value');
+        esAdmin = (snap.val() === true);
+      } catch (err) {
+        console.warn('No se pudo leer /admins:', err && err.code);
+        await auth.signOut();
+        try { await auth.signInAnonymously(); } catch (_) {}
+        alert('No se pudo verificar el permiso de administrador. Revisa las Reglas de Realtime Database y que exista el nodo "admins".');
+        document.getElementById('admin-pass-input').value = '';
+        return;
+      }
+
+      if (!esAdmin) {
+        await auth.signOut();
+        try { await auth.signInAnonymously(); } catch (_) {}
+        alert('Esta cuenta no tiene permisos de administrador.');
+        document.getElementById('admin-pass-input').value = '';
+        return;
+      }
+
+      adminUidVerificado = cred.user.uid;
+      cerrarModalAdminLogin();
+      isAdminActive = true;
+      document.getElementById('admin-section').classList.remove('hidden');
+      document.getElementById('btn-admin-text').innerText = 'Salir de Admin';
+      showToast('Acceso Concedido', 'Bienvenido al panel de administración.', 'success');
     }
 
     function showAdminTab(tabName) {
@@ -2633,7 +2663,7 @@
 
     // Verifica que haya sesión de administrador activa en Firebase antes de escribir
     function verificarAdminFirebase() {
-      if (!auth || !auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+      if (!auth || !auth.currentUser || !adminUidVerificado || auth.currentUser.uid !== adminUidVerificado) {
         showToast('Sesión de administrador requerida', 'Sal de Modo Administrador y vuelve a entrar con tu correo y contraseña.', 'error');
         return false;
       }
@@ -2642,7 +2672,7 @@
 
     function mensajeErrorFirebase(err) {
       if (err && (err.code === 'PERMISSION_DENIED' || /permission_denied/i.test(err.message || ''))) {
-        return 'Firebase rechazó el cambio (PERMISSION_DENIED). Revisa las Reglas de Realtime Database y que tu UID de administrador sea el correcto.';
+        return 'Firebase rechazó el cambio (PERMISSION_DENIED). Revisa las Reglas de Realtime Database y que tu UID esté en el nodo admins.';
       }
       return (err && err.message) ? err.message : 'Error desconocido al guardar en la nube.';
     }
@@ -2827,7 +2857,7 @@
         alert('La contraseña de Administrador debe tener al menos 8 caracteres.');
         return;
       }
-      if (!auth || !auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+      if (!auth || !auth.currentUser || !adminUidVerificado || auth.currentUser.uid !== adminUidVerificado) {
         alert('Necesitas iniciar sesión como administrador.');
         return;
       }
