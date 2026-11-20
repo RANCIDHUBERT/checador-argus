@@ -23,6 +23,7 @@
       'bar-chart-3': P('M3 3v18h18') + P('M18 17V9') + P('M13 17V5') + P('M8 17v-3'),
       'building-2': P('M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z') + P('M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2') + P('M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2') + P('M10 6h4') + P('M10 10h4') + P('M10 14h4') + P('M10 18h4'),
       'cake': P('M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8') + P('M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1') + P('M2 21h20') + P('M7 8v3') + P('M12 8v3') + P('M17 8v3') + P('M7 4h.01') + P('M12 4h.01') + P('M17 4h.01'),
+      'calendar': R(3,4,18,18,2) + L(16,2,16,6) + L(8,2,8,6) + L(3,10,21,10),
       'camera': P('M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z') + C(12,13,3),
       'check': P('M20 6 9 17l-5-5'),
       'check-circle': P('M22 11.08V12a10 10 0 1 1-5.93-9.14') + P('m9 11 3 3L22 4'),
@@ -44,8 +45,10 @@
       'log-in': P('M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4') + PL('10 17 15 12 10 7') + L(15,12,3,12),
       'log-out': P('M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4') + PL('16 17 21 12 16 7') + L(21,12,9,12),
       'map-pin': P('M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z') + C(12,10,3),
+      'palmtree': P('M13 8c0-2.76-2.46-5-5.5-5S2 5.24 2 8h2l1-1 1 1h4') + P('M13 7.14A5.82 5.82 0 0 1 16.5 6c3.04 0 5.5 2.24 5.5 5h-3l-1-1-1 1h-3') + P('M5.89 9.71c-2.15 2.15-2.3 5.47-.35 7.43l4.24-4.25.7-.7.71-.71-2.12-2.12-2.12-2.12zm11.31 1.42-2.12 2.12 2.12 2.12.71.71.7.7 4.24 4.25c1.96-1.96 1.81-5.28-.35-7.43l-2.12-2.12-2.12-2.12Z') + L(12,13,12,22),
       'power': P('M18.36 6.64a9 9 0 1 1-12.73 0') + L(12,2,12,12),
       'refresh-cw': P('M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8') + P('M21 3v5h-5') + P('M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16') + P('M8 16H3v5'),
+      'repeat': P('m17 2 4 4-4 4') + P('M3 11v-1a4 4 0 0 1 4-4h14') + P('m7 22-4-4 4-4') + P('M21 13v1a4 4 0 0 1-4 4H3'),
       'rotate-ccw': P('M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8') + P('M3 3v5h5'),
       'save': P('M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z') + PL('17 21 17 13 7 13 7 21') + PL('7 3 7 8 15 8'),
       'search': C(11,11,8) + P('m21 21-4.3-4.3'),
@@ -248,7 +251,7 @@
           <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
             <span id="header-company-title">HUBERT CHECKIN PRO</span> <span class="text-xs font-semibold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync</span>
           </h1>
-          <p class="text-xs text-slate-400">Control de Asistencia Multidispositivo con Registro en Excel</p>
+          <p class="text-xs text-slate-400">Control de Asistencia Multidispositivo con Registro en Excel y Prenómina</p>
         </div>
       </div>
 
@@ -429,7 +432,7 @@
       </div>
     </section>
 
-    <!-- SECCIÓN ADMINISTRATIVA (PROTEGIDA POR PIN ADMIN) -->
+    <!-- SECCIÓN ADMINISTRATIVA (PROTEGIDA POR LOGIN ADMIN FIREBASE) -->
     <section id="admin-section" class="hidden bg-slate-800 border border-slate-700/70 rounded-2xl p-6 shadow-2xl flex flex-col gap-6">
       <div class="flex flex-wrap items-center justify-between border-b border-slate-700/60 pb-4 gap-4">
         <div>
@@ -437,16 +440,18 @@
             <i data-lucide="settings" class="w-6 h-6 text-amber-400"></i>
             Panel de Administración & Control
           </h2>
-          <p class="text-xs text-slate-400">Gestión de personal, logotipo de empresa, equipos vinculados (laptop/celular), faltas y tolerancia</p>
+          <p class="text-xs text-slate-400">Gestión de personal, turnos rotativos, vacaciones e incidencias, prenómina CSV y configuración</p>
         </div>
 
         <!-- NAVEGACIÓN PESTAÑAS ADMIN -->
-        <div class="flex flex-wrap items-center gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-700">
-          <button onclick="showAdminTab('history')" id="tab-btn-history" class="px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white transition">Historial (Sincronizado)</button>
-          <button onclick="showAdminTab('hours')" id="tab-btn-hours" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5"><i data-lucide="timer" class="w-3.5 h-3.5 text-amber-400"></i> Horas / Estándar</button>
-          <button onclick="showAdminTab('faltas')" id="tab-btn-faltas" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5"><i data-lucide="user-x" class="w-3.5 h-3.5 text-rose-400"></i> Registrar Falta</button>
-          <button onclick="showAdminTab('employees')" id="tab-btn-employees" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">Colaboradores</button>
-          <button onclick="showAdminTab('config')" id="tab-btn-config" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">Configuración Nube</button>
+        <div class="flex flex-wrap items-center gap-1.5 bg-slate-900 p-1.5 rounded-xl border border-slate-700">
+          <button onclick="showAdminTab('history')" id="tab-btn-history" class="px-3.5 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white transition">Historial</button>
+          <button onclick="showAdminTab('hours')" id="tab-btn-hours" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5"><i data-lucide="timer" class="w-3.5 h-3.5 text-amber-400"></i> Horas / Prenómina</button>
+          <button onclick="showAdminTab('shifts')" id="tab-btn-shifts" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5"><i data-lucide="repeat" class="w-3.5 h-3.5 text-cyan-400"></i> Turnos Rotativos</button>
+          <button onclick="showAdminTab('absences')" id="tab-btn-absences" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5"><i data-lucide="palmtree" class="w-3.5 h-3.5 text-emerald-400"></i> Vacaciones / Incidencias</button>
+          <button onclick="showAdminTab('faltas')" id="tab-btn-faltas" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5"><i data-lucide="user-x" class="w-3.5 h-3.5 text-rose-400"></i> Registrar Falta</button>
+          <button onclick="showAdminTab('employees')" id="tab-btn-employees" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">Colaboradores</button>
+          <button onclick="showAdminTab('config')" id="tab-btn-config" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">Configuración Nube</button>
         </div>
       </div>
 
@@ -470,17 +475,25 @@
               <option value="Salida">Salida</option>
               <option value="Falta Justificada">Falta Justificada</option>
               <option value="Falta Injustificada">Falta Injustificada</option>
+              <option value="Vacaciones">Vacaciones</option>
+              <option value="Incapacidad">Incapacidad</option>
+              <option value="Permiso con Goce">Permiso con Goce</option>
+              <option value="Permiso sin Goce">Permiso sin Goce</option>
             </select>
             <button onclick="limpiarFiltrosHistorial()" class="text-xs text-slate-400 hover:text-white underline">Limpiar filtros</button>
           </div>
 
-          <!-- BOTÓN ÚNICO DE EXPORTACIÓN A EXCEL COMPLETO -->
-          <div class="flex items-center gap-2">
-            <button id="btn-refresh-admin" onclick="refrescarInformacionAdmin()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-md" title="Vuelve a cargar los datos de la nube sin salir del modo administrador">
+          <!-- BOTONES DE ACTUALIZACIÓN, CSV PRENÓMINA Y EXCEL -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btn-refresh-admin" onclick="refrescarInformacionAdmin()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition shadow-md" title="Vuelve a cargar los datos de la nube sin salir del modo administrador">
               <i data-lucide="refresh-cw" class="w-4 h-4"></i>
               <span id="txt-refresh-admin">Actualizar datos</span>
             </button>
-            <button onclick="exportToExcel()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-md">
+            <button onclick="exportPrenominaCSV()" class="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition shadow-md" title="Exporta layout de prenómina en formato .csv">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+              <span>Layout Prenómina (.csv)</span>
+            </button>
+            <button onclick="exportToExcel()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition shadow-md">
               <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
               <span>Descargar Excel (.xlsx)</span>
             </button>
@@ -510,19 +523,29 @@
         </div>
       </div>
 
-      <!-- TAB 2: RESUMEN DE HORAS TRABAJADAS, RETARDOS Y FALTAS -->
+      <!-- TAB 2: RESUMEN DE HORAS TRABAJADAS, RETARDOS, FALTAS Y LAYOUT PRENÓMINA CSV -->
       <div id="admin-tab-hours" class="hidden flex flex-col gap-4">
         <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/50 flex flex-wrap justify-between items-center gap-4">
           <div>
             <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2">
               <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i>
-              Resumen Acumulado de Horas, Retardos y Faltas
+              Resumen Acumulado de Horas, Retardos, Faltas y Prenómina
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">Calculado automáticamente con tolerancia de horarios y registro de incidencias.</p>
+            <p class="text-xs text-slate-400 mt-0.5">Calculado automáticamente con turnos rotativos, tolerancia, incidencias y exportación CSV para prenómina.</p>
           </div>
-          <button onclick="renderHoursTable()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Actualizar Totales
-          </button>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="text-[11px] text-slate-400">Periodo CSV:</label>
+            <input type="date" id="prenomina-start-date" onchange="renderHoursTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+            <span class="text-xs text-slate-500">a</span>
+            <input type="date" id="prenomina-end-date" onchange="renderHoursTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+            <button onclick="exportPrenominaCSV()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow">
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Exportar Layout Prenómina (.csv)
+            </button>
+            <button onclick="renderHoursTable()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Actualizar Totales
+            </button>
+          </div>
         </div>
 
         <div class="overflow-x-auto rounded-xl border border-slate-700/60 custom-scrollbar">
@@ -531,18 +554,209 @@
               <tr>
                 <th class="p-3.5">ID / Colaborador</th>
                 <th class="p-3.5">Departamento</th>
+                <th class="p-3.5">Turno Actual</th>
                 <th class="p-3.5 text-center">Estatus Actual</th>
                 <th class="p-3.5 text-center bg-blue-900/20">Hoy (Día)</th>
                 <th class="p-3.5 text-center bg-emerald-900/20">Esta Semana</th>
                 <th class="p-3.5 text-center bg-amber-900/20">Este Mes</th>
-                <th class="p-3.5 text-center bg-rose-900/20 text-rose-300">Total Retardos</th>
-                <th class="p-3.5 text-center bg-red-950/40 text-red-400">Total Faltas</th>
+                <th class="p-3.5 text-center bg-rose-900/20 text-rose-300">Retardos</th>
+                <th class="p-3.5 text-center bg-red-950/40 text-red-400">Faltas</th>
+                <th class="p-3.5 text-center bg-cyan-950/30 text-cyan-300">Vac./Inc.</th>
               </tr>
             </thead>
             <tbody id="hours-table-body" class="divide-y divide-slate-700/40 bg-slate-800/40">
               <!-- Carga dinámica -->
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- TAB NUEVA: TURNOS ROTATIVOS -->
+      <div id="admin-tab-shifts" class="hidden flex flex-col gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- FORMULARIO TURNO ROTATIVO -->
+          <div class="lg:col-span-5 bg-slate-900/60 border border-cyan-500/30 rounded-xl p-5 flex flex-col gap-4 shadow-xl">
+            <h3 class="font-bold text-sm text-cyan-300 flex items-center gap-2 border-b border-slate-700 pb-3">
+              <i data-lucide="repeat" class="w-5 h-5 text-cyan-400"></i>
+              Crear / Configurar Turno Rotativo
+            </h3>
+            <form onsubmit="guardarTurnoRotativo(event)" class="flex flex-col gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre del Turno</label>
+                <input type="text" id="shift-name-input" required placeholder="Ej. Turno Matutino / Vespertino / Nocturno" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Hora Entrada</label>
+                  <input type="time" id="shift-entry-input" required value="08:00" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Hora Salida</label>
+                  <input type="time" id="shift-exit-input" value="16:30" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Tolerancia (min)</label>
+                  <input type="number" id="shift-tol-input" required min="0" max="60" value="15" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyan-500">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Ciclo de Rotación (días)</label>
+                  <input type="number" id="shift-cycle-input" min="1" max="90" value="7" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Siguiente Turno en Rotación</label>
+                  <select id="shift-next-select" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                    <option value="">-- Sin rotación automática --</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="mt-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-2 shadow-lg">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                Guardar Turno
+              </button>
+            </form>
+          </div>
+
+          <!-- ASIGNACIÓN DE TURNO A COLABORADOR -->
+          <div class="lg:col-span-7 bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-4 shadow-xl">
+            <h3 class="font-bold text-sm text-white flex items-center gap-2 border-b border-slate-700 pb-3">
+              <i data-lucide="user-check" class="w-4 h-4 text-cyan-400"></i>
+              Asignar / Rotar Turno a Colaborador
+            </h3>
+            <form onsubmit="asignarTurnoEmpleado(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+              <div class="sm:col-span-5">
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Colaborador</label>
+                <select id="assign-shift-emp-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                  <option value="">-- Selecciona colaborador --</option>
+                </select>
+              </div>
+              <div class="sm:col-span-4">
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Turno</label>
+                <select id="assign-shift-id-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                  <option value="">-- Turno --</option>
+                </select>
+              </div>
+              <div class="sm:col-span-3">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-xs transition shadow">
+                  Asignar
+                </button>
+              </div>
+            </form>
+
+            <!-- CATÁLOGO DE TURNOS -->
+            <div class="overflow-x-auto rounded-xl border border-slate-700/60 custom-scrollbar mt-1">
+              <table class="w-full text-left text-xs text-slate-300">
+                <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
+                  <tr>
+                    <th class="p-3">Turno</th>
+                    <th class="p-3">Horario</th>
+                    <th class="p-3 text-center">Tol.</th>
+                    <th class="p-3 text-center">Ciclo</th>
+                    <th class="p-3">Rota A</th>
+                    <th class="p-3 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="shifts-table-body" class="divide-y divide-slate-700/40 bg-slate-800/40"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLA DE ASIGNACIÓN ACTUAL POR COLABORADOR -->
+        <div class="overflow-x-auto rounded-xl border border-slate-700/60 custom-scrollbar">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
+              <tr>
+                <th class="p-3.5">ID / Colaborador</th>
+                <th class="p-3.5">Departamento</th>
+                <th class="p-3.5">Turno Asignado</th>
+                <th class="p-3.5">Hora Entrada / Tol.</th>
+                <th class="p-3.5 text-right">Rotación Rápida</th>
+              </tr>
+            </thead>
+            <tbody id="shift-assignments-body" class="divide-y divide-slate-700/40 bg-slate-800/40"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB NUEVA: VACACIONES E INCIDENCIAS (CON RANGO DE FECHAS) -->
+      <div id="admin-tab-absences" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 bg-slate-900/60 border border-emerald-500/30 rounded-xl p-5 flex flex-col gap-4 shadow-xl">
+          <h3 class="font-bold text-sm text-emerald-300 flex items-center gap-2 border-b border-slate-700 pb-3">
+            <i data-lucide="palmtree" class="w-5 h-5 text-emerald-400"></i>
+            Registrar Vacaciones o Incidencia (Rango de Fechas)
+          </h3>
+          <p class="text-xs text-slate-400">Registra periodos de vacaciones, incapacidades o permisos entre una fecha inicial y una fecha final. Se reflejarán en el historial y en el layout CSV de prenómina.</p>
+
+          <form onsubmit="registrarVacacionIncidencia(event)" class="flex flex-col gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Colaborador</label>
+              <select id="inc-employee-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                <option value="">-- Seleccione un colaborador --</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Tipo de Incidencia / Ausencia</label>
+              <select id="inc-type-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                <option value="Vacaciones">Vacaciones</option>
+                <option value="Incapacidad">Incapacidad</option>
+                <option value="Permiso con Goce">Permiso con Goce</option>
+                <option value="Permiso sin Goce">Permiso sin Goce</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Fecha Inicio</label>
+                <input type="date" id="inc-start-date" required onchange="actualizarConteoDiasRango()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Fecha Fin</label>
+                <input type="date" id="inc-end-date" required onchange="actualizarConteoDiasRango()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+              </div>
+            </div>
+
+            <div id="inc-days-preview" class="text-[11px] font-mono text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-1.5">
+              Días en rango: 1 día
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Notas / Folio / Motivo (Opcional)</label>
+              <input type="text" id="inc-notes-input" placeholder="Ej. Periodo vacacional anual, folio IMSS..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <button type="submit" class="mt-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-2 shadow-lg">
+              <i data-lucide="calendar" class="w-4 h-4"></i>
+              Guardar Rango de Vacaciones / Incidencia
+            </button>
+          </form>
+        </div>
+
+        <div class="lg:col-span-7 bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col gap-3 shadow-xl">
+          <h4 class="font-bold text-xs uppercase tracking-wider text-slate-300 flex items-center gap-2 border-b border-slate-700/60 pb-2.5">
+            <i data-lucide="calendar" class="w-4 h-4 text-emerald-400"></i>
+            Vacaciones e Incidencias Registradas
+          </h4>
+          <div class="overflow-x-auto rounded-xl border border-slate-700/60 custom-scrollbar">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-700/60">
+                <tr>
+                  <th class="p-3">Colaborador</th>
+                  <th class="p-3">Tipo</th>
+                  <th class="p-3">Rango Fechas</th>
+                  <th class="p-3 text-center">Días</th>
+                  <th class="p-3">Notas</th>
+                  <th class="p-3 text-right">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="absences-table-body" class="divide-y divide-slate-700/40 bg-slate-800/40"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -596,7 +810,7 @@
           <ul class="text-xs text-slate-300 space-y-2 list-disc list-inside">
             <li>Las faltas registradas por el Administrador quedan sincronizadas en tiempo real en la nube.</li>
             <li>En la pestaña de <strong>Historial</strong> aparecerán destacadas con una etiqueta en rojo intenso.</li>
-            <li>El reporte descargable en <strong>Excel (.xlsx)</strong> incluirá automáticamente la columna de Faltas Justificadas/Injustificadas y su conteo global.</li>
+            <li>El reporte descargable en <strong>Excel (.xlsx)</strong> y el <strong>Layout de Prenómina (.csv)</strong> incluirán automáticamente las faltas y su conteo global.</li>
             <li>Si un empleado tuvo una falta pero asistió después, puedes eliminar la falta desde la tabla del Historial.</li>
           </ul>
         </div>
@@ -628,6 +842,13 @@
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Departamento</label>
               <input type="text" id="emp-dept" required placeholder="Ej. Taller / Producción" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-cyan-300 mb-1">Turno Asignado (Opcional)</label>
+              <select id="emp-shift-select" class="w-full bg-slate-800 border border-cyan-500/30 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                <option value="">-- Turno general de empresa --</option>
+              </select>
             </div>
 
             <div>
@@ -848,6 +1069,8 @@
     let historyRef = null;
     let employeesRef = null;
     let companyConfigRef = null;
+    let shiftsRef = null;
+    let absencesRef = null;
 
     try {
       if (typeof firebase !== 'undefined' && !firebase.apps.length) {
@@ -861,6 +1084,8 @@
         historyRef = db.ref('historial');
         employeesRef = db.ref('empleados');
         companyConfigRef = db.ref('empresa_config');
+        shiftsRef = db.ref('turnos_rotativos');
+        absencesRef = db.ref('incidencias_vacaciones');
       }
     } catch (err) {
       console.warn("Error en inicialización de Firebase:", err);
@@ -932,6 +1157,8 @@
         historyRef.off('value');
         employeesRef.off('value');
         if (companyConfigRef) companyConfigRef.off('value');
+        if (shiftsRef) shiftsRef.off('value');
+        if (absencesRef) absencesRef.off('value');
       } catch (e) { console.warn('No se pudieron quitar escuchas previas:', e); }
 
       // 1. Escuchar Historial de Asistencias
@@ -965,7 +1192,8 @@
                   _key: k,
                   id: v.id != null ? String(v.id) : v.id,
                   pin: v.pin != null ? String(v.pin) : v.pin,
-                  isAdmin: v.isAdmin === true
+                  isAdmin: v.isAdmin === true,
+                  shiftId: v.shiftId || ''
                 });
                 empNorm.registeredDeviceTokens = obtenerEquiposAutorizados(empNorm);
                 empNorm.registeredDeviceToken = empNorm.registeredDeviceTokens[0] || null;
@@ -979,6 +1207,7 @@
           renderEmployeeSelect();
           renderEmployeesTable();
           renderHoursTable();
+          renderShiftAssignmentsTable();
           if (selectedEmployeeId) onSelectEmployee();
         } catch (e) {
           console.error("Error al procesar snapshot de empleados:", e);
@@ -1012,6 +1241,44 @@
           }
         }, (error) => {
           console.error("Error de lectura en Firebase (config):", error);
+        });
+      }
+
+      // 4. Escuchar Turnos Rotativos
+      if (shiftsRef) {
+        shiftsRef.on('value', (snapshot) => {
+          try {
+            const val = snapshot.val();
+            turnosRotativos = val
+              ? Object.entries(val).filter(([k, v]) => v && typeof v === 'object').map(([k, v]) => Object.assign({}, v, { id: v.id || k }))
+              : [];
+            localStorage.setItem('checkin_shifts', JSON.stringify(turnosRotativos));
+            renderShiftsUI();
+            if (selectedEmployeeId) onSelectEmployee();
+          } catch (e) {
+            console.error("Error al procesar snapshot de turnos:", e);
+          }
+        }, (error) => {
+          console.error("Error de lectura en Firebase (turnos_rotativos):", error);
+        });
+      }
+
+      // 5. Escuchar Vacaciones e Incidencias (rango de fechas)
+      if (absencesRef) {
+        absencesRef.on('value', (snapshot) => {
+          try {
+            const val = snapshot.val();
+            incidenciasRango = val
+              ? Object.entries(val).filter(([k, v]) => v && typeof v === 'object').map(([k, v]) => Object.assign({}, v, { id: v.id || k })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+              : [];
+            localStorage.setItem('checkin_absences', JSON.stringify(incidenciasRango));
+            renderAbsencesTable();
+            renderHoursTable();
+          } catch (e) {
+            console.error("Error al procesar snapshot de incidencias:", e);
+          }
+        }, (error) => {
+          console.error("Error de lectura en Firebase (incidencias_vacaciones):", error);
         });
       }
     }
@@ -1173,6 +1440,8 @@
 
     let empleados = JSON.parse(localStorage.getItem('checkin_employees')) || [];
     let historial = JSON.parse(localStorage.getItem('checkin_history')) || [];
+    let turnosRotativos = JSON.parse(localStorage.getItem('checkin_shifts')) || [];
+    let incidenciasRango = JSON.parse(localStorage.getItem('checkin_absences')) || [];
     localStorage.removeItem('checkin_admin_pin');
     
     // LOGIN DE EMPRESA, LOGO Y COLABORADOR ACTIVO
@@ -1216,6 +1485,8 @@
       seguro(renderEmployeesTable);
       seguro(renderHistoryTable);
       seguro(renderHoursTable);
+      seguro(renderShiftsUI);
+      seguro(renderAbsencesTable);
       seguro(bloquearAtajosTeclado);
       seguro(iniciarGPSContinuo);
       seguro(actualizarTextosEmpresa);
@@ -1223,12 +1494,26 @@
       seguro(actualizarBadgeHorario);
       seguro(actualizarEstadoBotonesEventos);
 
-      const poneFechaFalta = () => seguro(() => {
-        const hoyStr = obtenerHoraActualCorregida().toISOString().split('T')[0];
+      const poneFechasDefecto = () => seguro(() => {
+        const hoyDate = obtenerHoraActualCorregida();
+        const hoyStr = hoyDate.toISOString().split('T')[0];
+        const inicioMesStr = new Date(hoyDate.getFullYear(), hoyDate.getMonth(), 1).toISOString().split('T')[0];
+
         const fechaFaltaEl = document.getElementById('falta-date-input');
-        if (fechaFaltaEl) fechaFaltaEl.value = hoyStr;
+        if (fechaFaltaEl && !fechaFaltaEl.value) fechaFaltaEl.value = hoyStr;
+
+        const incStart = document.getElementById('inc-start-date');
+        const incEnd = document.getElementById('inc-end-date');
+        if (incStart && !incStart.value) incStart.value = hoyStr;
+        if (incEnd && !incEnd.value) incEnd.value = hoyStr;
+        actualizarConteoDiasRango();
+
+        const preStart = document.getElementById('prenomina-start-date');
+        const preEnd = document.getElementById('prenomina-end-date');
+        if (preStart && !preStart.value) preStart.value = inicioMesStr;
+        if (preEnd && !preEnd.value) preEnd.value = hoyStr;
       });
-      poneFechaFalta();
+      poneFechasDefecto();
 
       try { await asegurarSesionAnonima(); } catch (e) { console.error('Error de sesión anónima:', e); }
       seguro(conectarSincronizacionFirebase);
@@ -1246,10 +1531,513 @@
 
       try { await sincronizarHoraRedSilencioso(); } catch (e) { console.error('Error al sincronizar hora:', e); }
       seguro(updateClock);
-      poneFechaFalta();
+      poneFechasDefecto();
 
       setInterval(sincronizarHoraRedSilencioso, 300000);
     });
+
+    // =====================================================================
+    // MÓDULO 1: TURNOS ROTATIVOS
+    // =====================================================================
+    function obtenerTurnoEmpleado(emp) {
+      if (!emp || !emp.shiftId) return null;
+      return turnosRotativos.find(t => t.id === emp.shiftId) || null;
+    }
+
+    function obtenerHorarioToleranciaEfectivo(emp) {
+      const turno = obtenerTurnoEmpleado(emp);
+      if (turno && turno.entryTime) {
+        return {
+          entryTime: turno.entryTime,
+          tolerance: typeof turno.toleranceMinutes === 'number' ? turno.toleranceMinutes : toleranceMinutes,
+          shiftName: turno.name || 'Turno Rotativo'
+        };
+      }
+      return {
+        entryTime: officialEntryTime,
+        tolerance: toleranceMinutes,
+        shiftName: 'Horario General'
+      };
+    }
+
+    function actualizarBadgeHorarioParaEmpleado(emp) {
+      const badge = document.getElementById('entry-schedule-badge');
+      if (!badge) return;
+      const cfg = obtenerHorarioToleranciaEfectivo(emp);
+      const labelTurno = emp && cfg.shiftName !== 'Horario General' ? ` [${cfg.shiftName}]` : '';
+      badge.innerHTML = `<i data-lucide="alarm-clock" class="w-3.5 h-3.5 text-amber-400"></i> Entrada${labelTurno}: ${cfg.entryTime} (+${cfg.tolerance}m tol)`;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function guardarTurnoRotativo(e) {
+      e.preventDefault();
+      if (!verificarAdminFirebase()) return;
+
+      const name = document.getElementById('shift-name-input')?.value.trim();
+      const entryTime = document.getElementById('shift-entry-input')?.value;
+      const exitTime = document.getElementById('shift-exit-input')?.value || '';
+      const tolVal = parseInt(document.getElementById('shift-tol-input')?.value);
+      const cycleDays = parseInt(document.getElementById('shift-cycle-input')?.value) || 7;
+      const nextShiftId = document.getElementById('shift-next-select')?.value || '';
+
+      if (!name || !entryTime) {
+        alert('Ingresa el nombre del turno y la hora de entrada.');
+        return;
+      }
+
+      const id = 'SHIFT_' + name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') + '_' + Date.now().toString(36);
+      const shiftObj = {
+        id,
+        name,
+        entryTime,
+        exitTime,
+        toleranceMinutes: isNaN(tolVal) || tolVal < 0 ? toleranceMinutes : tolVal,
+        cycleDays,
+        nextShiftId
+      };
+
+      try {
+        if (shiftsRef) {
+          await shiftsRef.child(id).set(shiftObj);
+        } else {
+          turnosRotativos.push(shiftObj);
+          localStorage.setItem('checkin_shifts', JSON.stringify(turnosRotativos));
+          renderShiftsUI();
+        }
+        document.getElementById('shift-name-input').value = '';
+        showToast('Turno Guardado', `Turno "${name}" (${entryTime}) sincronizado.`, 'success');
+      } catch (err) {
+        console.error('Error al guardar turno:', err);
+        showToast('No se pudo guardar turno', mensajeErrorFirebase(err), 'error');
+      }
+    }
+
+    async function eliminarTurnoRotativo(shiftId) {
+      if (!verificarAdminFirebase()) return;
+      if (!confirm('¿Deseas eliminar este turno rotativo?')) return;
+
+      try {
+        if (shiftsRef) {
+          await shiftsRef.child(shiftId).remove();
+        } else {
+          turnosRotativos = turnosRotativos.filter(t => t.id !== shiftId);
+          localStorage.setItem('checkin_shifts', JSON.stringify(turnosRotativos));
+          renderShiftsUI();
+        }
+        showToast('Turno Eliminado', 'El turno fue removido.', 'info');
+      } catch (err) {
+        showToast('Error al eliminar turno', mensajeErrorFirebase(err), 'error');
+      }
+    }
+
+    async function asignarTurnoEmpleado(e) {
+      e.preventDefault();
+      if (!verificarAdminFirebase()) return;
+
+      const empId = document.getElementById('assign-shift-emp-select')?.value;
+      const shiftId = document.getElementById('assign-shift-id-select')?.value;
+      if (!empId) return;
+
+      const emp = empleados.find(x => x.id === empId);
+      if (!emp) return;
+
+      emp.shiftId = shiftId || '';
+      localStorage.setItem('checkin_employees', JSON.stringify(empleados));
+
+      try {
+        if (employeesRef) {
+          await employeesRef.child(emp._key || emp.id.replace(/[^a-zA-Z0-9]/g, '_')).update({ shiftId: emp.shiftId || null });
+        }
+        const turnoObj = turnosRotativos.find(t => t.id === shiftId);
+        showToast('Turno Asignado', `${emp.name} → ${turnoObj ? turnoObj.name : 'Horario General'}`, 'success');
+        renderShiftAssignmentsTable();
+        renderHoursTable();
+        if (selectedEmployeeId === empId) onSelectEmployee();
+      } catch (err) {
+        showToast('Error al asignar turno', mensajeErrorFirebase(err), 'error');
+      }
+    }
+
+    async function rotarTurnoEmpleadoAhora(empId) {
+      if (!verificarAdminFirebase()) return;
+      const emp = empleados.find(x => x.id === empId);
+      if (!emp) return;
+
+      const actual = obtenerTurnoEmpleado(emp);
+      let siguiente = null;
+
+      if (actual && actual.nextShiftId) {
+        siguiente = turnosRotativos.find(t => t.id === actual.nextShiftId) || null;
+      }
+      if (!siguiente && turnosRotativos.length > 0) {
+        const idx = actual ? turnosRotativos.findIndex(t => t.id === actual.id) : -1;
+        siguiente = turnosRotativos[(idx + 1) % turnosRotativos.length];
+      }
+
+      if (!siguiente) {
+        showToast('Sin turnos para rotar', 'Crea al menos un turno rotativo primero.', 'info');
+        return;
+      }
+
+      emp.shiftId = siguiente.id;
+      localStorage.setItem('checkin_employees', JSON.stringify(empleados));
+      try {
+        if (employeesRef) {
+          await employeesRef.child(emp._key || emp.id.replace(/[^a-zA-Z0-9]/g, '_')).update({ shiftId: siguiente.id });
+        }
+        showToast('Turno Rotado', `${emp.name} ahora está en "${siguiente.name}" (${siguiente.entryTime}).`, 'success');
+        renderShiftAssignmentsTable();
+        renderHoursTable();
+        if (selectedEmployeeId === empId) onSelectEmployee();
+      } catch (err) {
+        showToast('Error al rotar turno', mensajeErrorFirebase(err), 'error');
+      }
+    }
+
+    function renderShiftsUI() {
+      const shiftsBody = document.getElementById('shifts-table-body');
+      const nextSelect = document.getElementById('shift-next-select');
+      const assignShiftSelect = document.getElementById('assign-shift-id-select');
+      const empFormShiftSelect = document.getElementById('emp-shift-select');
+
+      const opts = '<option value="">-- Turno general de empresa --</option>' +
+        turnosRotativos.map(t => `<option value="${t.id}">${t.name} (${t.entryTime}, +${t.toleranceMinutes ?? toleranceMinutes}m)</option>`).join('');
+
+      if (assignShiftSelect) assignShiftSelect.innerHTML = opts;
+      if (empFormShiftSelect) {
+        const prevVal = empFormShiftSelect.value;
+        empFormShiftSelect.innerHTML = opts;
+        if (prevVal) empFormShiftSelect.value = prevVal;
+      }
+      if (nextSelect) {
+        nextSelect.innerHTML = '<option value="">-- Sin rotación automática --</option>' +
+          turnosRotativos.map(t => `<option value="${t.id}">${t.name} (${t.entryTime})</option>`).join('');
+      }
+
+      if (shiftsBody) {
+        if (turnosRotativos.length === 0) {
+          shiftsBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">No hay turnos rotativos creados aún.</td></tr>`;
+        } else {
+          shiftsBody.innerHTML = turnosRotativos.map(t => {
+            const rotaA = turnosRotativos.find(x => x.id === t.nextShiftId);
+            return `
+              <tr class="hover:bg-slate-700/30 transition">
+                <td class="p-3 font-bold text-cyan-300">${t.name}</td>
+                <td class="p-3 font-mono text-slate-200">${t.entryTime}${t.exitTime ? ' - ' + t.exitTime : ''}</td>
+                <td class="p-3 text-center font-mono text-amber-300">+${t.toleranceMinutes ?? toleranceMinutes}m</td>
+                <td class="p-3 text-center font-mono text-slate-300">${t.cycleDays || 7}d</td>
+                <td class="p-3 text-slate-400">${rotaA ? rotaA.name : '—'}</td>
+                <td class="p-3 text-right">
+                  <button onclick="eliminarTurnoRotativo('${t.id}')" class="p-1.5 bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-lg transition" title="Eliminar turno">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      renderShiftAssignmentsTable();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderShiftAssignmentsTable() {
+      const assignEmpSelect = document.getElementById('assign-shift-emp-select');
+      const body = document.getElementById('shift-assignments-body');
+
+      if (assignEmpSelect) {
+        const cur = assignEmpSelect.value;
+        assignEmpSelect.innerHTML = '<option value="">-- Selecciona colaborador --</option>' +
+          empleados.map(e => `<option value="${e.id}">${e.id} - ${e.name}</option>`).join('');
+        if (cur) assignEmpSelect.value = cur;
+      }
+
+      if (!body) return;
+      if (empleados.length === 0) {
+        body.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Sin colaboradores registrados.</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = empleados.map(emp => {
+        const cfg = obtenerHorarioToleranciaEfectivo(emp);
+        return `
+          <tr class="hover:bg-slate-700/30 transition">
+            <td class="p-3.5 font-medium text-white">${emp.name} <span class="text-slate-500 text-xs">(${emp.id})</span></td>
+            <td class="p-3.5 text-slate-400">${emp.dept}</td>
+            <td class="p-3.5"><span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">${cfg.shiftName}</span></td>
+            <td class="p-3.5 font-mono text-amber-300">${cfg.entryTime} (+${cfg.tolerance}m tol)</td>
+            <td class="p-3.5 text-right">
+              <button onclick="rotarTurnoEmpleadoAhora('${emp.id}')" class="px-2.5 py-1 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1">
+                <i data-lucide="repeat" class="w-3.5 h-3.5"></i> Rotar
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // =====================================================================
+    // MÓDULO 2: VACACIONES E INCIDENCIAS (CON RANGO DE FECHAS)
+    // =====================================================================
+    function calcularDiasEntreFechas(startStr, endStr) {
+      if (!startStr || !endStr) return 0;
+      const d1 = new Date(startStr + 'T00:00:00');
+      const d2 = new Date(endStr + 'T00:00:00');
+      if (isNaN(d1.getTime()) || isNaN(d2.getTime()) || d2 < d1) return 0;
+      return Math.round((d2 - d1) / 86400000) + 1;
+    }
+
+    function actualizarConteoDiasRango() {
+      const s = document.getElementById('inc-start-date')?.value;
+      const e = document.getElementById('inc-end-date')?.value;
+      const box = document.getElementById('inc-days-preview');
+      if (!box) return;
+      const dias = calcularDiasEntreFechas(s, e);
+      if (dias <= 0) {
+        box.innerText = '⚠️ La fecha final debe ser igual o posterior a la fecha inicial.';
+        box.className = 'text-[11px] font-mono text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-1.5';
+      } else {
+        box.innerText = `Días en rango: ${dias} ${dias === 1 ? 'día' : 'días'}`;
+        box.className = 'text-[11px] font-mono text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-1.5';
+      }
+    }
+
+    function obtenerDiasIncidenciaEnRango(empId, tipoFiltro, startRangeStr, endRangeStr) {
+      let totalDias = 0;
+      const rStart = startRangeStr ? new Date(startRangeStr + 'T00:00:00') : null;
+      const rEnd = endRangeStr ? new Date(endRangeStr + 'T23:59:59') : null;
+
+      incidenciasRango.forEach(inc => {
+        if (inc.empId !== empId) return;
+        if (tipoFiltro && inc.type !== tipoFiltro) return;
+        const iStart = new Date(inc.startDate + 'T00:00:00');
+        const iEnd = new Date(inc.endDate + 'T00:00:00');
+        if (isNaN(iStart.getTime()) || isNaN(iEnd.getTime())) return;
+
+        const effStart = rStart && iStart < rStart ? rStart : iStart;
+        const effEnd = rEnd && iEnd > rEnd ? new Date(rEnd.getFullYear(), rEnd.getMonth(), rEnd.getDate()) : iEnd;
+        if (effEnd >= effStart) {
+          totalDias += Math.round((effEnd - effStart) / 86400000) + 1;
+        }
+      });
+      return totalDias;
+    }
+
+    async function registrarVacacionIncidencia(e) {
+      e.preventDefault();
+      if (!verificarAdminFirebase()) return;
+
+      const empId = document.getElementById('inc-employee-select')?.value;
+      const type = document.getElementById('inc-type-select')?.value;
+      const startDate = document.getElementById('inc-start-date')?.value;
+      const endDate = document.getElementById('inc-end-date')?.value;
+      const notes = document.getElementById('inc-notes-input')?.value.trim() || '';
+
+      const dias = calcularDiasEntreFechas(startDate, endDate);
+      if (!empId || !type || dias <= 0) {
+        alert('Verifica el colaborador, el tipo y un rango de fechas válido (fecha fin >= fecha inicio).');
+        return;
+      }
+
+      const emp = empleados.find(x => x.id === empId);
+      if (!emp) return;
+
+      const id = `INC_${empId}_${startDate}_${endDate}_${Date.now()}`;
+      const incObj = {
+        id,
+        empId: emp.id,
+        empName: emp.name,
+        empDept: emp.dept,
+        type,
+        startDate,
+        endDate,
+        days: dias,
+        notes,
+        createdAt: Date.now()
+      };
+
+      try {
+        if (absencesRef) {
+          await absencesRef.child(id).set(incObj);
+        } else {
+          incidenciasRango.unshift(incObj);
+          localStorage.setItem('checkin_absences', JSON.stringify(incidenciasRango));
+          renderAbsencesTable();
+          renderHoursTable();
+        }
+        document.getElementById('inc-notes-input').value = '';
+        showToast('Incidencia Registrada', `${type} (${dias}d) para ${emp.name}: ${startDate} a ${endDate}.`, 'success');
+      } catch (err) {
+        showToast('Error al guardar incidencia', mensajeErrorFirebase(err), 'error');
+      }
+    }
+
+    async function eliminarIncidenciaRango(incId) {
+      if (!verificarAdminFirebase()) return;
+      if (!confirm('¿Deseas eliminar este registro de vacaciones/incidencia?')) return;
+
+      try {
+        if (absencesRef) {
+          await absencesRef.child(incId).remove();
+        } else {
+          incidenciasRango = incidenciasRango.filter(x => x.id !== incId);
+          localStorage.setItem('checkin_absences', JSON.stringify(incidenciasRango));
+          renderAbsencesTable();
+          renderHoursTable();
+        }
+        showToast('Incidencia Eliminada', 'Registro removido.', 'info');
+      } catch (err) {
+        showToast('Error al eliminar', mensajeErrorFirebase(err), 'error');
+      }
+    }
+
+    function renderAbsencesTable() {
+      const sel = document.getElementById('inc-employee-select');
+      if (sel) {
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">-- Seleccione un colaborador --</option>' +
+          empleados.map(e => `<option value="${e.id}">${e.id} - ${e.name}</option>`).join('');
+        if (cur) sel.value = cur;
+      }
+
+      const tbody = document.getElementById('absences-table-body');
+      if (!tbody) return;
+
+      if (incidenciasRango.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">No hay vacaciones ni incidencias registradas.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = incidenciasRango.map(inc => {
+        const badgeClass = inc.type === 'Vacaciones'
+          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+          : inc.type === 'Incapacidad'
+          ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+          : 'bg-sky-500/20 text-sky-300 border-sky-500/30';
+
+        return `
+          <tr class="hover:bg-slate-700/30 transition">
+            <td class="p-3 font-medium text-white">${inc.empName} <span class="text-slate-500 text-xs">(${inc.empId})</span></td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded border text-xs font-semibold ${badgeClass}">${inc.type}</span></td>
+            <td class="p-3 font-mono text-slate-200">${inc.startDate} → ${inc.endDate}</td>
+            <td class="p-3 text-center font-mono font-bold text-white">${inc.days || calcularDiasEntreFechas(inc.startDate, inc.endDate)}d</td>
+            <td class="p-3 text-slate-400">${inc.notes || '—'}</td>
+            <td class="p-3 text-right">
+              <button onclick="eliminarIncidenciaRango('${inc.id}')" class="p-1.5 bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-lg transition" title="Eliminar">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // =====================================================================
+    // MÓDULO 3: EXPORTACIÓN DE LAYOUT DE PRENÓMINA (.csv)
+    // =====================================================================
+    function escapeCSVField(val) {
+      const s = String(val == null ? '' : val);
+      if (/[",\n\r;]/.test(s)) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }
+
+    function exportPrenominaCSV() {
+      if (empleados.length === 0) {
+        alert('No hay colaboradores registrados para generar el layout de prenómina.');
+        return;
+      }
+
+      const hoyDate = obtenerHoraActualCorregida();
+      const hoyStr = hoyDate.toISOString().split('T')[0];
+      const inicioMesStr = new Date(hoyDate.getFullYear(), hoyDate.getMonth(), 1).toISOString().split('T')[0];
+
+      const startStr = document.getElementById('prenomina-start-date')?.value || inicioMesStr;
+      const endStr = document.getElementById('prenomina-end-date')?.value || hoyStr;
+
+      const rows = empleados.map(emp => {
+        const cfgTurno = obtenerHorarioToleranciaEfectivo(emp);
+
+        const marcasPeriodo = historial.filter(h =>
+          h.empId === emp.id &&
+          h.eventType !== 'Login Empresa' &&
+          (!startStr || h.date >= startStr) &&
+          (!endStr || h.date <= endStr)
+        );
+
+        const fechasPeriodo = [...new Set(marcasPeriodo.map(m => m.date))];
+        let totalMsPeriodo = 0;
+        fechasPeriodo.forEach(f => {
+          totalMsPeriodo += calcularHorasTrabajadasPorDia(emp.id, f);
+        });
+
+        const horasDecimales = (totalMsPeriodo / (1000 * 60 * 60)).toFixed(2);
+        const retardosPeriodo = marcasPeriodo.filter(h => h.eventType === 'Entrada' && h.toleranciaStatus && h.toleranciaStatus.retardo).length;
+        const minutosRetardo = marcasPeriodo
+          .filter(h => h.eventType === 'Entrada' && h.toleranciaStatus && h.toleranciaStatus.retardo)
+          .reduce((acc, h) => acc + (h.toleranciaStatus.minutosDelay || 0), 0);
+
+        const faltasInjust = marcasPeriodo.filter(h => h.eventType === 'Falta Injustificada').length;
+        const faltasJust = marcasPeriodo.filter(h => h.eventType === 'Falta Justificada').length;
+        const diasVacaciones = obtenerDiasIncidenciaEnRango(emp.id, 'Vacaciones', startStr, endStr);
+        const diasIncapacidad = obtenerDiasIncidenciaEnRango(emp.id, 'Incapacidad', startStr, endStr);
+        const diasPermiso = obtenerDiasIncidenciaEnRango(emp.id, 'Permiso con Goce', startStr, endStr) +
+          obtenerDiasIncidenciaEnRango(emp.id, 'Permiso sin Goce', startStr, endStr);
+
+        return [
+          emp.id,
+          emp.name,
+          emp.dept,
+          cfgTurno.shiftName,
+          startStr,
+          endStr,
+          formatearMsAHorasMinutos(totalMsPeriodo),
+          horasDecimales,
+          retardosPeriodo,
+          minutosRetardo,
+          faltasInjust,
+          faltasJust,
+          diasVacaciones,
+          diasIncapacidad,
+          diasPermiso
+        ].map(escapeCSVField).join(',');
+      });
+
+      const headers = [
+        'ID_EMPLEADO',
+        'NOMBRE_COLABORADOR',
+        'DEPARTAMENTO',
+        'TURNO_ASIGNADO',
+        'FECHA_INICIO',
+        'FECHA_FIN',
+        'HORAS_TRABAJADAS_HM',
+        'HORAS_DECIMALES',
+        'CANTIDAD_RETARDOS',
+        'MINUTOS_RETARDO',
+        'FALTAS_INJUSTIFICADAS',
+        'FALTAS_JUSTIFICADAS',
+        'DIAS_VACACIONES',
+        'DIAS_INCAPACIDAD',
+        'DIAS_PERMISOS'
+      ].map(escapeCSVField).join(',');
+
+      const csvContent = '\uFEFF' + [headers, ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Layout_Prenomina_${startStr}_a_${endStr}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('Prenómina CSV Exportada', `Layout generado (${startStr} a ${endStr}).`, 'success');
+    }
 
     // =====================================================================
     // GESTIÓN DEL LOGO / IMAGEN DE LA EMPRESA
@@ -1427,6 +2215,11 @@
     }
 
     function actualizarBadgeHorario() {
+      const empActual = selectedEmployeeId ? empleados.find(e => e.id === selectedEmployeeId) : null;
+      if (empActual && empActual.shiftId) {
+        actualizarBadgeHorarioParaEmpleado(empActual);
+        return;
+      }
       const badge = document.getElementById('entry-schedule-badge');
       const inputEntry = document.getElementById('cfg-entry-time');
       const inputTol = document.getElementById('cfg-tolerance-min');
@@ -1921,6 +2714,8 @@
       document.getElementById('admin-section').classList.remove('hidden');
       document.getElementById('btn-admin-text').innerText = 'Salir de Admin';
       actualizarLogoEmpresaEnUI();
+      renderShiftsUI();
+      renderAbsencesTable();
       showToast('Acceso Concedido', 'Bienvenido al panel de administración.', 'success');
     }
 
@@ -1942,10 +2737,15 @@
         await auth.currentUser.getIdToken(true);
         if (db) { db.goOffline(); db.goOnline(); }
         conectarSincronizacionFirebase();
-        await Promise.all([ historyRef.once('value'), employeesRef.once('value') ]);
+        const promises = [ historyRef.once('value'), employeesRef.once('value') ];
+        if (shiftsRef) promises.push(shiftsRef.once('value'));
+        if (absencesRef) promises.push(absencesRef.once('value'));
+        await Promise.all(promises);
         programarRenderHistorial();
         renderEmployeesTable();
         renderEmployeeSelect();
+        renderShiftsUI();
+        renderAbsencesTable();
         showToast('Información actualizada', 'Se cargaron los datos más recientes de la nube.', 'success');
       } catch (err) {
         console.error('Error al actualizar información:', err);
@@ -1958,22 +2758,25 @@
     }
 
     function showAdminTab(tabName) {
-      ['history', 'hours', 'faltas', 'employees', 'config'].forEach(t => {
+      ['history', 'hours', 'shifts', 'absences', 'faltas', 'employees', 'config'].forEach(t => {
         const el = document.getElementById(`admin-tab-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
         if (el) el.classList.add('hidden');
-        if (btn) btn.className = 'px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5';
+        if (btn) btn.className = 'px-3.5 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5';
       });
 
       const activeEl = document.getElementById(`admin-tab-${tabName}`);
       const activeBtn = document.getElementById(`tab-btn-${tabName}`);
       if (activeEl) activeEl.classList.remove('hidden');
-      if (activeBtn) activeBtn.className = 'px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5';
+      if (activeBtn) activeBtn.className = 'px-3.5 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white transition flex items-center gap-1.5';
 
       if (tabName === 'hours') {
         renderHoursTable();
-      }
-      if (tabName === 'config') {
+      } else if (tabName === 'shifts') {
+        renderShiftsUI();
+      } else if (tabName === 'absences') {
+        renderAbsencesTable();
+      } else if (tabName === 'config') {
         actualizarLogoEmpresaEnUI();
       }
     }
@@ -1984,12 +2787,16 @@
     function renderEmployeeSelect() {
       const faltaSelect = document.getElementById('falta-employee-select');
       const loginEmpSelect = document.getElementById('login-employee-select');
+      const incEmpSelect = document.getElementById('inc-employee-select');
+      const assignShiftEmpSelect = document.getElementById('assign-shift-emp-select');
       
       const optionsHtml = '<option value="">-- Seleccione un colaborador --</option>' + 
         empleados.map(emp => `<option value="${emp.id}">${emp.id} - ${emp.name}</option>`).join('');
 
       if (faltaSelect) faltaSelect.innerHTML = optionsHtml;
       if (loginEmpSelect) loginEmpSelect.innerHTML = optionsHtml;
+      if (incEmpSelect) incEmpSelect.innerHTML = optionsHtml;
+      if (assignShiftEmpSelect) assignShiftEmpSelect.innerHTML = optionsHtml;
 
       const matchedDeviceEmp = empleados.find(e => obtenerEquiposAutorizados(e).includes(currentDeviceToken));
       if (matchedDeviceEmp && !selectedEmployeeId) {
@@ -2098,6 +2905,7 @@
           <p class="text-slate-400 text-sm">Selecciona un empleado para habilitar el registro</p>
         `;
         pinContainer.classList.add('hidden');
+        actualizarBadgeHorario();
         if (window.lucide) lucide.createIcons();
         actualizarEstadoBotonesEventos();
         return;
@@ -2105,6 +2913,8 @@
 
       const emp = empleados.find(e => e.id === selectedEmployeeId);
       if (emp) {
+        actualizarBadgeHorarioParaEmpleado(emp);
+        const cfgTurno = obtenerHorarioToleranciaEfectivo(emp);
         const equipos = obtenerEquiposAutorizados(emp);
         const esteEquipoEnlazado = equipos.includes(currentDeviceToken);
 
@@ -2124,6 +2934,8 @@
           ? `<p class="text-[11px] text-emerald-300 mt-1">Marcas hoy: ${Array.from(completadosHoy).join(' · ')}</p>`
           : `<p class="text-[11px] text-slate-500 mt-1">Sin marcas registradas hoy</p>`;
 
+        const turnoHtml = `<p class="text-[11px] text-cyan-300 mt-0.5">Turno: <strong>${cfgTurno.shiftName}</strong> (${cfgTurno.entryTime}, +${cfgTurno.tolerance}m tol)</p>`;
+
         const photoHtml = emp.photo 
           ? `<img src="${emp.photo}" class="w-16 h-16 rounded-full object-cover border-2 border-blue-500 shadow-md flex-shrink-0">`
           : `<div class="p-3 bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-full flex-shrink-0"><i data-lucide="user-check" class="w-8 h-8"></i></div>`;
@@ -2134,7 +2946,8 @@
             <div class="flex-1 overflow-hidden">
               <h3 class="font-bold text-white text-base truncate">${emp.name}</h3>
               <p class="text-xs text-slate-400">ID: <span class="text-slate-200 font-mono">${emp.id}</span> | Depto: <span class="text-slate-200">${emp.dept}</span></p>
-              <p class="text-[11px] mt-1">${statusDispositivo}</p>
+              ${turnoHtml}
+              <p class="text-[11px] mt-0.5">${statusDispositivo}</p>
               ${resumenHoyHtml}
             </div>
           </div>
@@ -2200,15 +3013,16 @@
       }
     }
 
-    function evaluarToleranciaEntrada(fechaObj) {
-      if (!officialEntryTime) return { retardo: false, minutosDelay: 0, statusLabel: 'A Tiempo' };
+    function evaluarToleranciaEntrada(fechaObj, empObj = null) {
+      const cfg = obtenerHorarioToleranciaEfectivo(empObj);
+      if (!cfg.entryTime) return { retardo: false, minutosDelay: 0, statusLabel: 'A Tiempo' };
 
-      const [pHoras, pMinutos] = officialEntryTime.split(':').map(Number);
+      const [pHoras, pMinutos] = cfg.entryTime.split(':').map(Number);
       
       const limiteOficial = new Date(fechaObj);
       limiteOficial.setHours(pHoras, pMinutos, 0, 0);
 
-      const limiteConTolerancia = new Date(limiteOficial.getTime() + (toleranceMinutes * 60 * 1000));
+      const limiteConTolerancia = new Date(limiteOficial.getTime() + (cfg.tolerance * 60 * 1000));
 
       if (fechaObj > limiteConTolerancia) {
         const diffMs = fechaObj.getTime() - limiteOficial.getTime();
@@ -2446,10 +3260,15 @@
         .filter(item => item.empId === empId && item.eventType !== 'Login Empresa')
         .sort((a, b) => b.timestamp - a.timestamp);
 
+      const hoyStr = obtenerHoraActualCorregida().toISOString().split('T')[0];
+      const incHoy = incidenciasRango.find(inc => inc.empId === empId && inc.startDate <= hoyStr && inc.endDate >= hoyStr);
+      if (incHoy) {
+        return { texto: incHoy.type, badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' };
+      }
+
       if (marcasDelEmpleado.length === 0) return { texto: 'Sin marcas', badge: 'bg-slate-700/50 text-slate-400 border-slate-600' };
 
       const ultimaMarca = marcasDelEmpleado[0];
-      const hoyStr = obtenerHoraActualCorregida().toISOString().split('T')[0];
 
       if (ultimaMarca.date !== hoyStr) {
         return { texto: 'Fuera de Turno', badge: 'bg-slate-700/50 text-slate-400 border-slate-600' };
@@ -2496,13 +3315,17 @@
 
       const totalRetardos = historial.filter(h => h.empId === empId && h.eventType === 'Entrada' && h.toleranciaStatus && h.toleranciaStatus.retardo).length;
       const totalFaltas = historial.filter(h => h.empId === empId && h.eventType.includes('Falta')).length;
+      const totalVacInc = incidenciasRango
+        .filter(i => i.empId === empId)
+        .reduce((acc, i) => acc + (i.days || calcularDiasEntreFechas(i.startDate, i.endDate)), 0);
 
       return {
         hoy: formatearMsAHorasMinutos(msHoy),
         semana: formatearMsAHorasMinutos(msSemana),
         mes: formatearMsAHorasMinutos(msMes),
         totalRetardos,
-        totalFaltas
+        totalFaltas,
+        totalVacInc
       };
     }
 
@@ -2511,18 +3334,20 @@
       if (!tbody) return;
 
       if (empleados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">No hay colaboradores registrados para calcular horas.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-500">No hay colaboradores registrados para calcular horas.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = empleados.map(emp => {
         const estatus = obtenerEstatusColaborador(emp.id);
         const horas = calcularResumenHorasEmpleado(emp.id);
+        const cfgTurno = obtenerHorarioToleranciaEfectivo(emp);
 
         return `
           <tr class="hover:bg-slate-700/30 transition">
             <td class="p-3.5 font-medium text-white">${emp.name} <span class="text-slate-500 text-xs">(${emp.id})</span></td>
             <td class="p-3.5 text-slate-400">${emp.dept}</td>
+            <td class="p-3.5 text-cyan-300 text-xs font-medium">${cfgTurno.shiftName}</td>
             <td class="p-3.5 text-center">
               <span class="px-2.5 py-1 rounded-md text-xs font-semibold border ${estatus.badge}">
                 ${estatus.texto}
@@ -2533,6 +3358,7 @@
             <td class="p-3.5 text-center font-mono text-amber-300 font-bold bg-amber-900/10">${horas.mes}</td>
             <td class="p-3.5 text-center font-mono text-rose-300 font-bold bg-rose-900/10">${horas.totalRetardos}</td>
             <td class="p-3.5 text-center font-mono text-red-400 font-bold bg-red-950/20">${horas.totalFaltas}</td>
+            <td class="p-3.5 text-center font-mono text-cyan-300 font-bold bg-cyan-950/20">${horas.totalVacInc}d</td>
           </tr>
         `;
       }).join('');
@@ -2679,6 +3505,9 @@
         const record = respuesta.data.record;
         if (record) {
           record.deviceToken = currentDeviceToken;
+          if (selectedEventType === 'Entrada') {
+            record.toleranciaStatus = evaluarToleranciaEntrada(new Date(record.timestamp || obtenerHoraActualCorregida().getTime()), emp);
+          }
           if (!historial.some(h => h.id === record.id && h.empId === record.empId && h.eventType === record.eventType)) {
             historial.unshift(record);
           }
@@ -3068,6 +3897,11 @@
           ? `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 ml-1.5 rounded-md text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20"><i data-lucide="fingerprint" class="w-3 h-3"></i> Huella</span>`
           : '';
 
+        const turnoObj = obtenerTurnoEmpleado(emp);
+        const turnoBadge = turnoObj
+          ? `<div class="text-[11px] font-normal text-cyan-300 mt-0.5">🔄 ${turnoObj.name} (${turnoObj.entryTime})</div>`
+          : '';
+
         const photoImg = emp.photo 
           ? `<img src="${emp.photo}" class="w-9 h-9 rounded-full object-cover border border-slate-600">`
           : `<div class="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center text-slate-400 border border-slate-600"><i data-lucide="user" class="w-5 h-5"></i></div>`;
@@ -3076,7 +3910,7 @@
           <tr class="hover:bg-slate-700/30 transition">
             <td class="p-3.5">${photoImg}</td>
             <td class="p-3.5 font-mono text-slate-300">${emp.id}</td>
-            <td class="p-3.5 font-medium text-white">${emp.name}${emp.fechaNacimiento ? `<div class="text-[11px] font-normal text-pink-300 mt-0.5">🎂 ${textoCumple(emp)}</div>` : ''}</td>
+            <td class="p-3.5 font-medium text-white">${emp.name}${turnoBadge}${emp.fechaNacimiento ? `<div class="text-[11px] font-normal text-pink-300 mt-0.5">🎂 ${textoCumple(emp)}</div>` : ''}</td>
             <td class="p-3.5 text-slate-400">${emp.dept}</td>
             <td class="p-3.5">${deviceBadge}${huellaBadge}</td>
             <td class="p-3.5 text-right flex justify-end gap-2">
@@ -3175,6 +4009,7 @@
       const id = document.getElementById('emp-id').value.trim();
       const name = document.getElementById('emp-name').value.trim();
       const dept = document.getElementById('emp-dept').value.trim();
+      const shiftId = document.getElementById('emp-shift-select')?.value || '';
       const pin = document.getElementById('emp-pin').value.trim();
       const fechaNacimiento = document.getElementById('emp-birth').value || null;
       const isAdminEmp = Boolean(document.getElementById('emp-is-admin')?.checked);
@@ -3197,7 +4032,8 @@
       const empData = { 
         id, 
         name, 
-        dept, 
+        dept,
+        shiftId: shiftId || null,
         pin,
         isAdmin: isAdminEmp,
         fechaNacimiento,
@@ -3251,6 +4087,8 @@
       document.getElementById('emp-id').value = emp.id;
       document.getElementById('emp-name').value = emp.name;
       document.getElementById('emp-dept').value = emp.dept;
+      const shiftSel = document.getElementById('emp-shift-select');
+      if (shiftSel) shiftSel.value = emp.shiftId || '';
       document.getElementById('emp-pin').value = emp.pin || '';
       document.getElementById('emp-birth').value = emp.fechaNacimiento || '';
       const isAdminCheck = document.getElementById('emp-is-admin');
@@ -3283,6 +4121,8 @@
       document.getElementById('employee-form').reset();
       document.getElementById('emp-edit-index').value = '-1';
       document.getElementById('emp-photo-base64').value = '';
+      const shiftSel = document.getElementById('emp-shift-select');
+      if (shiftSel) shiftSel.value = '';
       const isAdminCheck = document.getElementById('emp-is-admin');
       if (isAdminCheck) isAdminCheck.checked = false;
       removerFotoSeleccionada();
