@@ -50,6 +50,7 @@
       'save': P('M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z') + PL('17 21 17 13 7 13 7 21') + PL('7 3 7 8 15 8'),
       'search': C(11,11,8) + P('m21 21-4.3-4.3'),
       'settings': P('M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z') + C(12,12,3),
+      'shield-check': P('M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z') + P('m9 12 2 2 4-4'),
       'smartphone': R(5,2,14,20,2) + P('M12 18h.01'),
       'smartphone-charging': R(5,2,14,20,2) + P('M12.667 8 10 12h4l-2.667 4'),
       'smartphone-nfc': R(2,6,8,12,1) + P('M6 14h.01') + P('M14 8a6 6 0 0 1 0 8') + P('M18 5a10 10 0 0 1 0 14'),
@@ -436,7 +437,7 @@
             <i data-lucide="settings" class="w-6 h-6 text-amber-400"></i>
             Panel de Administración & Control
           </h2>
-          <p class="text-xs text-slate-400">Gestión de personal, logotipo de empresa, asignación de PINs, desvinculación, registro de faltas y tolerancia</p>
+          <p class="text-xs text-slate-400">Gestión de personal, logotipo de empresa, equipos vinculados (laptop/celular), faltas y tolerancia</p>
         </div>
 
         <!-- NAVEGACIÓN PESTAÑAS ADMIN -->
@@ -645,6 +646,14 @@
               <input type="password" id="emp-pin" required maxlength="8" placeholder="PIN de 4 a 8 dígitos" class="w-full bg-slate-800 border border-amber-500/40 rounded-lg px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-500">
             </div>
 
+            <!-- ROL ADMINISTRADOR (SIN RESTRICCIÓN DE EQUIPO ÚNICO / LAPTOP + CELULAR) -->
+            <label class="flex items-start gap-2.5 bg-slate-800/90 border border-amber-500/30 rounded-lg p-2.5 cursor-pointer select-none">
+              <input type="checkbox" id="emp-is-admin" class="mt-0.5 rounded border-slate-600 text-amber-500 focus:ring-amber-500">
+              <span class="text-[11px] text-slate-200 leading-snug">
+                <strong class="text-amber-300">Es Administrador</strong> (permite registrar asistencia desde laptop y celular sin bloqueo de equipo único)
+              </span>
+            </label>
+
             <!-- CAMPO SUBIR FOTOGRAFÍA DE COLABORADOR -->
             <div>
               <label class="block text-xs font-bold text-sky-400 mb-1 flex items-center gap-1">
@@ -685,7 +694,7 @@
                 <th class="p-3.5">ID</th>
                 <th class="p-3.5">Nombre</th>
                 <th class="p-3.5">Departamento</th>
-                <th class="p-3.5">Estado Dispositivo</th>
+                <th class="p-3.5">Equipos (Máx. 2)</th>
                 <th class="p-3.5 text-right">Acciones</th>
               </tr>
             </thead>
@@ -824,6 +833,7 @@
     // =====================================================================
     const FIREBASE_URL = "https://checador-empresa-6b10a-default-rtdb.firebaseio.com/";
     const FIREBASE_API_KEY = "AIzaSyCHJySdiXmkrkrJKb5v_CjCu64ZJib-yio";
+    const MAX_EQUIPOS_POR_USUARIO = 2; // Soporta laptop + celular por colaborador
     let adminUidVerificado = null;
 
     let defaultFirebaseConfig = {
@@ -839,7 +849,6 @@
     let employeesRef = null;
     let companyConfigRef = null;
 
-    // Inicialización controlada
     try {
       if (typeof firebase !== 'undefined' && !firebase.apps.length) {
         firebase.initializeApp(defaultFirebaseConfig);
@@ -855,6 +864,31 @@
       }
     } catch (err) {
       console.warn("Error en inicialización de Firebase:", err);
+    }
+
+    // =====================================================================
+    // GESTIÓN DE MÚLTIPLES DISPOSITIVOS POR COLABORADOR (LAPTOP + CELULAR)
+    // =====================================================================
+    function obtenerEquiposAutorizados(emp) {
+      if (!emp) return [];
+      const lista = [];
+      if (Array.isArray(emp.registeredDeviceTokens)) {
+        emp.registeredDeviceTokens.forEach(t => {
+          if (t && !lista.includes(t)) lista.push(t);
+        });
+      }
+      if (emp.registeredDeviceToken && !lista.includes(emp.registeredDeviceToken)) {
+        lista.unshift(emp.registeredDeviceToken);
+      }
+      return lista;
+    }
+
+    function equipoAutorizadoParaEmp(emp, deviceToken) {
+      if (!emp) return false;
+      if (emp.isAdmin === true) return true;
+      const lista = obtenerEquiposAutorizados(emp);
+      if (lista.includes(deviceToken)) return true;
+      return lista.length < MAX_EQUIPOS_POR_USUARIO;
     }
 
     async function asegurarSesionAnonima() {
@@ -926,11 +960,17 @@
           if (val) {
             empleados = Object.entries(val)
               .filter(([k, v]) => v && typeof v === 'object')
-              .map(([k, v]) => Object.assign({}, v, {
-                _key: k,
-                id: v.id != null ? String(v.id) : v.id,
-                pin: v.pin != null ? String(v.pin) : v.pin
-              }));
+              .map(([k, v]) => {
+                const empNorm = Object.assign({}, v, {
+                  _key: k,
+                  id: v.id != null ? String(v.id) : v.id,
+                  pin: v.pin != null ? String(v.pin) : v.pin,
+                  isAdmin: v.isAdmin === true
+                });
+                empNorm.registeredDeviceTokens = obtenerEquiposAutorizados(empNorm);
+                empNorm.registeredDeviceToken = empNorm.registeredDeviceTokens[0] || null;
+                return empNorm;
+              });
             localStorage.setItem('checkin_employees', JSON.stringify(empleados));
           } else {
             empleados = [];
@@ -939,6 +979,7 @@
           renderEmployeeSelect();
           renderEmployeesTable();
           renderHoursTable();
+          if (selectedEmployeeId) onSelectEmployee();
         } catch (e) {
           console.error("Error al procesar snapshot de empleados:", e);
         }
@@ -1283,7 +1324,6 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Se usa PNG para conservar transparencia en logotipos si la tiene
           const compressedLogo = canvas.toDataURL('image/png');
           document.getElementById('cfg-company-logo-base64').value = compressedLogo;
 
@@ -1951,7 +1991,7 @@
       if (faltaSelect) faltaSelect.innerHTML = optionsHtml;
       if (loginEmpSelect) loginEmpSelect.innerHTML = optionsHtml;
 
-      const matchedDeviceEmp = empleados.find(e => e.registeredDeviceToken === currentDeviceToken);
+      const matchedDeviceEmp = empleados.find(e => obtenerEquiposAutorizados(e).includes(currentDeviceToken));
       if (matchedDeviceEmp && !selectedEmployeeId) {
         selectedEmployeeId = matchedDeviceEmp.id;
         const searchInput = document.getElementById('employee-search-input');
@@ -1977,7 +2017,7 @@
       }
 
       dropdown.innerHTML = filtered.map(emp => {
-        const isDeviceOwner = emp.registeredDeviceToken === currentDeviceToken;
+        const isDeviceOwner = obtenerEquiposAutorizados(emp).includes(currentDeviceToken);
         const isSelected = emp.id === selectedEmployeeId;
 
         return `
@@ -1985,6 +2025,7 @@
             <div>
               <p class="font-medium text-xs text-white flex items-center gap-1.5">
                 ${emp.name}
+                ${emp.isAdmin ? '<span class="px-1.5 py-0.2 bg-amber-500/20 text-amber-300 text-[10px] font-semibold border border-amber-500/30 rounded">Admin</span>' : ''}
                 ${isDeviceOwner ? '<span class="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold border border-emerald-500/30 rounded">Tu Equipo</span>' : ''}
               </p>
               <p class="text-[11px] text-slate-400">ID: ${emp.id} | ${emp.dept}</p>
@@ -2064,13 +2105,18 @@
 
       const emp = empleados.find(e => e.id === selectedEmployeeId);
       if (emp) {
-        let statusDispositivo = '<span class="text-emerald-400">Equipo Autorizado / Sin registrar</span>';
-        if (emp.registeredDeviceToken && emp.registeredDeviceToken !== currentDeviceToken) {
-          statusDispositivo = '<span class="text-rose-400 font-bold">⚠️ Este no es tu celular registrado</span>';
-        } else if (emp.credId) {
-          statusDispositivo = '<span class="text-sky-400">🔒 Huella vinculada a tu celular</span>';
+        const equipos = obtenerEquiposAutorizados(emp);
+        const esteEquipoEnlazado = equipos.includes(currentDeviceToken);
+
+        let statusDispositivo = '';
+        if (emp.isAdmin) {
+          statusDispositivo = '<span class="text-amber-300 font-semibold">🛡️ Administrador: acceso habilitado en laptop y celular</span>';
+        } else if (esteEquipoEnlazado) {
+          statusDispositivo = `<span class="text-emerald-400">✓ Equipo autorizado (${equipos.length}/${MAX_EQUIPOS_POR_USUARIO} vinculados)</span>`;
+        } else if (equipos.length < MAX_EQUIPOS_POR_USUARIO) {
+          statusDispositivo = `<span class="text-sky-400">+ Este equipo se vinculará al marcar (${equipos.length}/${MAX_EQUIPOS_POR_USUARIO} usados)</span>`;
         } else {
-          statusDispositivo = '<span class="text-amber-400">Se vinculará tu huella al iniciar sesión</span>';
+          statusDispositivo = `<span class="text-rose-400 font-bold">⚠️ Límite de ${MAX_EQUIPOS_POR_USUARIO} equipos alcanzado (laptop/celular)</span>`;
         }
 
         const completadosHoy = obtenerEventosRegistradosHoy(emp.id);
@@ -2316,14 +2362,14 @@
           return true;
         }
 
-        showToast('Vincula tu huella', 'Coloca tu dedo en el sensor para vincularla a este celular.', 'info');
+        showToast('Vincula tu huella', 'Coloca tu dedo en el sensor para vincularla a este equipo.', 'info');
         const datos = await enrolarHuella(emp);
         Object.assign(emp, datos);
         localStorage.setItem('checkin_employees', JSON.stringify(empleados));
         if (employeesRef) {
-          employeesRef.child(emp.id.replace(/[^a-zA-Z0-9]/g, '_')).update(datos);
+          employeesRef.child(emp._key || emp.id.replace(/[^a-zA-Z0-9]/g, '_')).update(datos);
         }
-        showToast('Huella vinculada', 'Tu huella quedó ligada a este celular.', 'success');
+        showToast('Huella vinculada', 'Tu huella quedó ligada a este equipo.', 'success');
         return true;
       } catch (err) {
         console.warn('Error biometría:', err);
@@ -2493,7 +2539,7 @@
     }
 
     // =====================================================================
-    // REGISTRO DE ASISTENCIA RÁPIDO (CLOUD FUNCTION SEGURA + BLOQUEO)
+    // REGISTRO DE ASISTENCIA RÁPIDO (2 DISPOSITIVOS + BLOQUEO DUPLICADOS)
     // =====================================================================
     let registrandoAhora = false;
     async function registrarAsistencia() {
@@ -2523,7 +2569,7 @@
         return;
       }
 
-      // Verificar que no se repita un evento ya registrado hoy ni un paso anterior
+      // 1. Verificar que no se repita un evento ya registrado hoy ni un paso anterior
       const motivoBloqueo = validarEventoPermitidoHoy(emp.id, selectedEventType);
       if (motivoBloqueo) {
         showToast('Registro bloqueado', motivoBloqueo, 'error');
@@ -2541,8 +2587,16 @@
         return;
       }
 
-      if (emp.registeredDeviceToken && emp.registeredDeviceToken !== currentDeviceToken) {
-        showToast('Dispositivo No Autorizado', 'Solo puedes registrar asistencia desde tu propio celular.', 'error');
+      // 2. Verificar autorización de dispositivo (hasta 2 equipos: laptop + celular, o libre para Admin)
+      const equiposActuales = obtenerEquiposAutorizados(emp);
+      const yaAutorizado = equiposActuales.includes(currentDeviceToken);
+
+      if (!emp.isAdmin && !yaAutorizado && equiposActuales.length >= MAX_EQUIPOS_POR_USUARIO) {
+        showToast(
+          'Límite de 2 dispositivos',
+          'Ya tienes 2 equipos registrados (laptop y celular). Pide al administrador desvincular uno.',
+          'error'
+        );
         document.getElementById('employee-pin-input').value = '';
         checkCanSubmit();
         return;
@@ -2589,14 +2643,26 @@
         }
       }
 
-      if (!emp.registeredDeviceToken) {
-        emp.registeredDeviceToken = currentDeviceToken;
+      // Registrar este equipo si aún no estaba en la lista (hasta 2 dispositivos, o ilimitado para admin)
+      if (!yaAutorizado && (emp.isAdmin || equiposActuales.length < MAX_EQUIPOS_POR_USUARIO)) {
+        const nuevosEquipos = [...equiposActuales, currentDeviceToken];
+        emp.registeredDeviceTokens = nuevosEquipos;
+        emp.registeredDeviceToken = nuevosEquipos[0];
+        localStorage.setItem('checkin_employees', JSON.stringify(empleados));
+
         if (employeesRef) {
-          employeesRef.child(emp.id.replace(/[^a-zA-Z0-9]/g, '_')).update({
-            registeredDeviceToken: currentDeviceToken
+          employeesRef.child(emp._key || emp.id.replace(/[^a-zA-Z0-9]/g, '_')).update({
+            registeredDeviceTokens: nuevosEquipos,
+            registeredDeviceToken: nuevosEquipos[0]
           });
         }
       }
+
+      // Token que se envía a la Cloud Function: si es el 2.º equipo o admin, envía su token registrado principal
+      // para mantener compatibilidad con backends que validan un solo campo `registeredDeviceToken`
+      const tokenParaServidor = (emp.isAdmin || yaAutorizado || equiposActuales.length === 0)
+        ? (emp.registeredDeviceToken || currentDeviceToken)
+        : currentDeviceToken;
 
       try {
         const registrarAsistenciaSegura = firebase.functions().httpsCallable('registrarAsistenciaSegura');
@@ -2605,15 +2671,19 @@
           empleadoId: emp.id,
           tipo: selectedEventType,
           pin: pinVal,
-          deviceToken: currentDeviceToken,
+          deviceToken: tokenParaServidor,
+          realDeviceToken: currentDeviceToken,
           location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 }
         });
 
         const record = respuesta.data.record;
-        if (record && !historial.some(h => h.id === record.id && h.empId === record.empId && h.eventType === record.eventType)) {
-          historial.unshift(record);
+        if (record) {
+          record.deviceToken = currentDeviceToken;
+          if (!historial.some(h => h.id === record.id && h.empId === record.empId && h.eventType === record.eventType)) {
+            historial.unshift(record);
+          }
         }
-        let tolResult = record.toleranciaStatus || { retardo: false, minutosDelay: 0, statusLabel: 'N/A' };
+        let tolResult = (record && record.toleranciaStatus) || { retardo: false, minutosDelay: 0, statusLabel: 'N/A' };
 
         playSuccessSound();
 
@@ -2983,10 +3053,16 @@
       }
 
       tbody.innerHTML = empleados.map((emp, index) => {
-        const tieneDispositivo = !!emp.registeredDeviceToken;
-        const deviceBadge = tieneDispositivo 
-          ? `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i data-lucide="smartphone-charging" class="w-3 h-3"></i> Enlazado</span>`
-          : `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20"><i data-lucide="smartphone" class="w-3 h-3"></i> Pendiente</span>`;
+        const equipos = obtenerEquiposAutorizados(emp);
+        const tieneDispositivo = equipos.length > 0;
+        let deviceBadge = '';
+        if (emp.isAdmin) {
+          deviceBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30"><i data-lucide="shield-check" class="w-3 h-3"></i> Admin (Laptop + Celular)</span>`;
+        } else if (tieneDispositivo) {
+          deviceBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i data-lucide="smartphone-charging" class="w-3 h-3"></i> Enlazado (${equipos.length}/${MAX_EQUIPOS_POR_USUARIO})</span>`;
+        } else {
+          deviceBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-700/60 text-slate-300 border border-slate-600"><i data-lucide="smartphone" class="w-3 h-3"></i> Pendiente (0/${MAX_EQUIPOS_POR_USUARIO})</span>`;
+        }
 
         const huellaBadge = emp.credId
           ? `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 ml-1.5 rounded-md text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20"><i data-lucide="fingerprint" class="w-3 h-3"></i> Huella</span>`
@@ -3005,7 +3081,7 @@
             <td class="p-3.5">${deviceBadge}${huellaBadge}</td>
             <td class="p-3.5 text-right flex justify-end gap-2">
               ${tieneDispositivo ? `
-                <button onclick="desvincularDispositivo('${emp.id}')" class="p-1.5 bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white rounded-lg transition" title="Desvincular Celular">
+                <button onclick="desvincularDispositivo('${emp.id}')" class="p-1.5 bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white rounded-lg transition" title="Desvincular Laptop y Celular">
                   <i data-lucide="smartphone-nfc" class="w-4 h-4"></i>
                 </button>
               ` : ''}
@@ -3101,6 +3177,7 @@
       const dept = document.getElementById('emp-dept').value.trim();
       const pin = document.getElementById('emp-pin').value.trim();
       const fechaNacimiento = document.getElementById('emp-birth').value || null;
+      const isAdminEmp = Boolean(document.getElementById('emp-is-admin')?.checked);
       const photo = document.getElementById('emp-photo-base64').value || null;
 
       if (!id || !name || !dept || !pin) {
@@ -3116,14 +3193,17 @@
       if (!verificarAdminFirebase()) return;
 
       const existingEmp = editIndex >= 0 ? empleados[editIndex] : null;
+      const equiposPrevios = existingEmp ? obtenerEquiposAutorizados(existingEmp) : [];
       const empData = { 
         id, 
         name, 
         dept, 
         pin,
+        isAdmin: isAdminEmp,
         fechaNacimiento,
         photo: photo || (existingEmp ? existingEmp.photo || null : null),
-        registeredDeviceToken: existingEmp ? (existingEmp.registeredDeviceToken || null) : null,
+        registeredDeviceTokens: equiposPrevios,
+        registeredDeviceToken: equiposPrevios[0] || null,
         credId: existingEmp ? (existingEmp.credId || null) : null,
         credPubKey: existingEmp ? (existingEmp.credPubKey || null) : null,
         credAlg: existingEmp ? (existingEmp.credAlg || null) : null
@@ -3173,6 +3253,8 @@
       document.getElementById('emp-dept').value = emp.dept;
       document.getElementById('emp-pin').value = emp.pin || '';
       document.getElementById('emp-birth').value = emp.fechaNacimiento || '';
+      const isAdminCheck = document.getElementById('emp-is-admin');
+      if (isAdminCheck) isAdminCheck.checked = emp.isAdmin === true;
       document.getElementById('emp-photo-base64').value = emp.photo || '';
 
       const previewContainer = document.getElementById('emp-photo-preview-container');
@@ -3201,6 +3283,8 @@
       document.getElementById('employee-form').reset();
       document.getElementById('emp-edit-index').value = '-1';
       document.getElementById('emp-photo-base64').value = '';
+      const isAdminCheck = document.getElementById('emp-is-admin');
+      if (isAdminCheck) isAdminCheck.checked = false;
       removerFotoSeleccionada();
 
       document.getElementById('employee-form-title').innerHTML = `
@@ -3244,9 +3328,10 @@
     }
 
     function desvincularDispositivo(empId) {
-      if (confirm('¿Deseas desvincular el celular/equipo de este colaborador para que pueda asociar uno nuevo?')) {
+      if (confirm('¿Deseas desvincular los equipos (laptop/celular) de este colaborador para que pueda asociar nuevos?')) {
         const emp = empleados.find(e => e.id === empId);
         if (emp) {
+          emp.registeredDeviceTokens = [];
           emp.registeredDeviceToken = null;
           emp.credId = null;
           emp.credPubKey = null;
@@ -3255,6 +3340,7 @@
           localStorage.setItem('checkin_employees', JSON.stringify(empleados));
           if (employeesRef) {
             employeesRef.child(emp._key || empId.replace(/[^a-zA-Z0-9]/g, '_')).update({
+              registeredDeviceTokens: null,
               registeredDeviceToken: null,
               credId: null,
               credPubKey: null,
@@ -3262,7 +3348,8 @@
             });
           }
           renderEmployeesTable();
-          showToast('Desvinculado', 'Dispositivo desasociado.', 'info');
+          if (selectedEmployeeId === empId) onSelectEmployee();
+          showToast('Desvinculado', 'Equipos desasociados correctamente.', 'info');
         }
       }
     }
