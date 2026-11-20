@@ -22,6 +22,7 @@
       'alert-triangle': P('m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3') + P('M12 9v4') + P('M12 17h.01'),
       'bar-chart-3': P('M3 3v18h18') + P('M18 17V9') + P('M13 17V5') + P('M8 17v-3'),
       'building-2': P('M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z') + P('M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2') + P('M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2') + P('M10 6h4') + P('M10 10h4') + P('M10 14h4') + P('M10 18h4'),
+      'cake': P('M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8') + P('M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1') + P('M2 21h20') + P('M7 8v3') + P('M12 8v3') + P('M17 8v3') + P('M7 4h.01') + P('M12 4h.01') + P('M17 4h.01'),
       'camera': P('M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z') + C(12,13,3),
       'check': P('M20 6 9 17l-5-5'),
       'check-circle': P('M22 11.08V12a10 10 0 1 1-5.93-9.14') + P('m9 11 3 3L22 4'),
@@ -166,10 +167,11 @@
   </div>
 
   <!-- PANTALLA DE LOGIN GENERAL CON DOBLE VERIFICACIÓN (EMPRESA + COLABORADOR) -->
-  <div id="company-login-overlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col gap-6 text-center border-t-4 border-t-blue-500">
+  <div id="company-login-overlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col gap-6 text-center border-t-4 border-t-blue-500 my-auto">
       
-      <div class="mx-auto p-4 bg-blue-600/10 border border-blue-500/20 text-blue-400 rounded-2xl w-fit">
+      <!-- CONTENEDOR DEL LOGO DE LA EMPRESA EN EL LOGIN -->
+      <div id="login-company-logo-container" class="mx-auto p-4 bg-blue-600/10 border border-blue-500/20 text-blue-400 rounded-2xl w-fit flex items-center justify-center overflow-hidden">
         <i data-lucide="building-2" class="w-10 h-10"></i>
       </div>
 
@@ -237,7 +239,8 @@
   <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700/60 sticky top-0 z-30 px-6 py-4">
     <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
       <div class="flex items-center gap-3">
-        <div class="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/20">
+        <!-- LOGO DE LA EMPRESA EN EL ENCABEZADO -->
+        <div id="header-company-logo-container" class="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/20 flex items-center justify-center overflow-hidden">
           <i data-lucide="cloud-lightning" class="w-7 h-7 text-white"></i>
         </div>
         <div>
@@ -352,7 +355,7 @@
               <i data-lucide="clock" class="w-5 h-5 text-blue-400"></i>
               Tipo de Evento a Registrar
             </h2>
-            <p class="text-xs text-slate-400 mt-0.5">Selecciona el tipo de marca que deseas realizar</p>
+            <p class="text-xs text-slate-400 mt-0.5">Selecciona el tipo de marca que deseas realizar (una sola vez por día)</p>
           </div>
           <div id="entry-schedule-badge" class="px-2.5 py-1 bg-slate-900/90 border border-slate-700 text-[11px] text-amber-300 rounded-lg font-mono flex items-center gap-1">
             <i data-lucide="alarm-clock" class="w-3.5 h-3.5 text-amber-400"></i> Entrada: 08:00 AM (+15m tol)
@@ -433,7 +436,7 @@
             <i data-lucide="settings" class="w-6 h-6 text-amber-400"></i>
             Panel de Administración & Control
           </h2>
-          <p class="text-xs text-slate-400">Gestión de personal, asignación de PINs, desvinculación, registro de faltas y tolerancia</p>
+          <p class="text-xs text-slate-400">Gestión de personal, logotipo de empresa, asignación de PINs, desvinculación, registro de faltas y tolerancia</p>
         </div>
 
         <!-- NAVEGACIÓN PESTAÑAS ADMIN -->
@@ -693,7 +696,7 @@
         </div>
       </div>
 
-      <!-- TAB 4: CONFIGURACIÓN NUBE Y HORARIO DE TOLERANCIA -->
+      <!-- TAB 4: CONFIGURACIÓN NUBE, LOGO DE EMPRESA Y HORARIO DE TOLERANCIA -->
       <div id="admin-tab-config" class="hidden flex flex-col gap-6 max-w-xl">
         
         <!-- CONFIGURACIÓN DE HORARIO Y TOLERANCIA DE ENTRADA -->
@@ -718,23 +721,49 @@
           </button>
         </div>
 
-        <!-- CONFIGURACIÓN DE LOGIN Y EMPRESA -->
+        <!-- CONFIGURACIÓN DE LOGO, NOMBRE Y CLAVE DE EMPRESA -->
         <div class="bg-slate-900/60 border border-blue-500/30 rounded-xl p-5 flex flex-col gap-4">
           <h3 class="font-bold text-sm text-blue-400 flex items-center gap-2 border-b border-slate-700 pb-3">
             <i data-lucide="building-2" class="w-4 h-4"></i>
-            Clave de Acceso General (Login Empresa)
+            Identidad, Logo y Clave de Acceso General (Login Empresa)
           </h3>
           <div class="flex flex-col gap-3">
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Nombre de la Empresa / Sistema</label>
               <input type="text" id="cfg-company-name" placeholder="Ej. HUBERT CHECKIN PRO" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
             </div>
+
+            <!-- SUBIR LOGO O IMAGEN DE LA EMPRESA -->
+            <div>
+              <label class="block text-xs font-bold text-sky-400 mb-1 flex items-center gap-1">
+                <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                Logo o Imagen de la Empresa (Inicio y Encabezado)
+              </label>
+              <input type="hidden" id="cfg-company-logo-base64" value="">
+              <div class="flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-lg p-3">
+                <div id="cfg-company-logo-preview" class="w-16 h-16 rounded-xl bg-slate-900 overflow-hidden flex-shrink-0 flex items-center justify-center border border-slate-600">
+                  <i data-lucide="building-2" class="w-7 h-7 text-slate-500"></i>
+                </div>
+                <div class="flex-1 flex flex-col gap-1.5">
+                  <input type="file" id="cfg-company-logo-file" accept="image/*" onchange="procesarLogoEmpresaSeleccionado(event)" class="hidden">
+                  <button type="button" onclick="document.getElementById('cfg-company-logo-file').click()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-md text-xs font-semibold border border-slate-600 transition flex items-center gap-1.5 w-fit">
+                    <i data-lucide="upload" class="w-3.5 h-3.5"></i> Seleccionar Logo / Imagen
+                  </button>
+                  <button type="button" id="btn-remove-company-logo" onclick="removerLogoEmpresaSeleccionado()" class="hidden text-[11px] text-rose-400 hover:underline w-fit">
+                    Quitar logo actual
+                  </button>
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">Se mostrará en la pantalla de inicio de sesión y en el encabezado superior para todos los dispositivos.</p>
+            </div>
+
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Nueva Clave de Acceso General</label>
-              <input type="password" id="cfg-company-pass" placeholder="Ingresa nueva clave general" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+              <input type="password" id="cfg-company-pass" placeholder="Ingresa nueva clave general (opcional)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
             </div>
-            <button onclick="guardarConfiguracionEmpresa()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-xs transition self-start px-4">
-              Guardar Clave de Empresa
+            <button onclick="guardarConfiguracionEmpresa()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg text-xs transition self-start px-4 flex items-center gap-1.5">
+              <i data-lucide="save" class="w-3.5 h-3.5"></i>
+              Guardar Logo y Datos de Empresa
             </button>
           </div>
         </div>
@@ -791,16 +820,10 @@
   <!-- LÓGICA DE LA APLICACIÓN -->
   <script>
     // =====================================================================
-    // PASO 2: CONEXIÓN Y SINCRONIZACIÓN CORREGIDA DE FIREBASE REALTIME DB
+    // CONEXIÓN Y SINCRONIZACIÓN DE FIREBASE REALTIME DB
     // =====================================================================
     const FIREBASE_URL = "https://checador-empresa-6b10a-default-rtdb.firebaseio.com/";
-
-    // >>> COMPLETA ESTOS DOS DATOS (Firebase Console > Configuración del proyecto) <<<
-    // La apiKey de Firebase es pública por diseño; lo que protege tus datos son las REGLAS.
     const FIREBASE_API_KEY = "AIzaSyCHJySdiXmkrkrJKb5v_CjCu64ZJib-yio";
-    // Los administradores ya NO están fijos en el código: se guardan en la base de datos,
-    // en el nodo /admins/<UID> = true (Firebase Console > Realtime Database > Datos).
-    // Aquí solo se recuerda el UID del admin que acaba de iniciar sesión (ya verificado).
     let adminUidVerificado = null;
 
     let defaultFirebaseConfig = {
@@ -834,8 +857,6 @@
       console.warn("Error en inicialización de Firebase:", err);
     }
 
-    // Sesión anónima para los dispositivos de los colaboradores.
-    // Si quedó una sesión de admin guardada en el navegador, se cierra al arrancar.
     async function asegurarSesionAnonima() {
       if (!auth) return false;
       try {
@@ -856,7 +877,6 @@
       }
     }
 
-    // Agrupa varios cambios seguidos de Firebase en UN solo redibujado de las tablas
     let renderHistorialTimer = null;
     function programarRenderHistorial() {
       if (renderHistorialTimer) return;
@@ -864,6 +884,7 @@
         renderHistorialTimer = null;
         try { renderHistoryTable(); } catch (e) { console.error('Error al dibujar historial:', e); }
         try { renderHoursTable(); } catch (e) { console.error('Error al dibujar horas:', e); }
+        try { actualizarEstadoBotonesEventos(); } catch (e) { console.error('Error al actualizar botones:', e); }
       }, 80);
     }
 
@@ -873,8 +894,6 @@
         return;
       }
 
-      // Si ya había escuchas activas (por ejemplo, antes de entrar como administrador), se quitan
-      // para volver a conectarlas con la sesión actual y no duplicarlas.
       try {
         historyRef.off('value');
         employeesRef.off('value');
@@ -909,7 +928,6 @@
               .filter(([k, v]) => v && typeof v === 'object')
               .map(([k, v]) => Object.assign({}, v, {
                 _key: k,
-                // Firebase guarda como número lo que se escribe sin comillas en la consola; se normaliza a texto
                 id: v.id != null ? String(v.id) : v.id,
                 pin: v.pin != null ? String(v.pin) : v.pin
               }));
@@ -928,7 +946,7 @@
         console.error("Error de lectura en Firebase (empleados):", error);
       });
 
-      // 3. Escuchar Configuración Empresarial
+      // 3. Escuchar Configuración Empresarial (Nombre, Clave, Horario y Logo)
       if (companyConfigRef) {
         companyConfigRef.on('value', (snapshot) => {
           try {
@@ -936,9 +954,16 @@
             if (cfgVal) {
               if (cfgVal.name) companyName = cfgVal.name;
               if (cfgVal.password) companyPassword = cfgVal.password;
+              companyLogo = cfgVal.logo || '';
+              if (companyLogo) {
+                localStorage.setItem('checkin_company_logo', companyLogo);
+              } else {
+                localStorage.removeItem('checkin_company_logo');
+              }
               if (cfgVal.officialEntryTime) officialEntryTime = cfgVal.officialEntryTime;
               if (typeof cfgVal.toleranceMinutes === 'number') toleranceMinutes = cfgVal.toleranceMinutes;
               actualizarTextosEmpresa();
+              actualizarLogoEmpresaEnUI();
               actualizarBadgeHorario();
             }
           } catch (e) {
@@ -950,7 +975,9 @@
       }
     }
 
+    // =====================================================================
     // BANCO DE 50 MENSAJES DE OPTIMISMO Y DESCANSO
+    // =====================================================================
     const MENSAJES_OPTIMISMO_ENTRADA = [
       "¡Excelente día! Tu actitud de hoy determina tus logros de mañana. ¡Da lo mejor de ti!",
       "¡Bienvenido! Cada inicio es una nueva oportunidad para demostrar tu gran talento.",
@@ -1007,6 +1034,91 @@
       "¡Gracias por tu entrega de hoy! Ve a descansar y a disfrutar con los tuyos."
     ];
 
+    // =====================================================================
+    // RESTRICCIÓN DE MARCAS DUPLICADAS Y PASOS ANTERIORES EN EL DÍA
+    // =====================================================================
+    const SECUENCIA_JORNADA = ['Entrada', 'Salida Comer', 'Regreso Comer', 'Salida'];
+
+    function obtenerEventosRegistradosHoy(empId) {
+      if (!empId) return new Set();
+      const hoyStr = obtenerHoraActualCorregida().toISOString().split('T')[0];
+      const completados = new Set();
+
+      historial.forEach(item => {
+        if (
+          item &&
+          item.empId === empId &&
+          item.date === hoyStr &&
+          SECUENCIA_JORNADA.includes(item.eventType)
+        ) {
+          completados.add(item.eventType);
+        }
+      });
+
+      return completados;
+    }
+
+    function validarEventoPermitidoHoy(empId, eventType) {
+      if (!empId || !eventType) return 'Selecciona un colaborador y un evento.';
+      const completados = obtenerEventosRegistradosHoy(empId);
+
+      if (completados.has(eventType)) {
+        return `Ya registraste "${eventType}" el día de hoy y no puede volverse a marcar.`;
+      }
+
+      const idxSolicitado = SECUENCIA_JORNADA.indexOf(eventType);
+      if (idxSolicitado > 0 && completados.size > 0) {
+        const mayorPasoHecho = Math.max(
+          ...Array.from(completados).map(ev => SECUENCIA_JORNADA.indexOf(ev))
+        );
+        if (mayorPasoHecho > idxSolicitado) {
+          return `Ya avanzaste en tu jornada (${SECUENCIA_JORNADA[mayorPasoHecho]}). No puedes volver a registrar "${eventType}".`;
+        }
+      }
+
+      return null;
+    }
+
+    function actualizarEstadoBotonesEventos() {
+      const completados = obtenerEventosRegistradosHoy(selectedEmployeeId);
+      const mayorPasoHecho = completados.size > 0
+        ? Math.max(...Array.from(completados).map(ev => SECUENCIA_JORNADA.indexOf(ev)))
+        : -1;
+
+      SECUENCIA_JORNADA.forEach((tipo, idx) => {
+        const btn = document.getElementById(`btn-event-${tipo}`);
+        if (!btn) return;
+
+        const yaHecho = completados.has(tipo);
+        const pasoAnteriorBloqueado = Boolean(selectedEmployeeId) && !yaHecho && idx < mayorPasoHecho;
+        const bloqueado = yaHecho || pasoAnteriorBloqueado;
+
+        let badgeBloqueo = btn.querySelector('.badge-evento-bloqueado');
+        if (bloqueado) {
+          btn.disabled = true;
+          btn.classList.add('opacity-45', 'cursor-not-allowed', 'pointer-events-none');
+          btn.classList.remove('hover:bg-slate-700/40', 'border-blue-500', 'ring-2', 'ring-blue-500/50');
+          if (selectedEventType === tipo) {
+            selectedEventType = '';
+          }
+
+          if (!badgeBloqueo) {
+            badgeBloqueo = document.createElement('span');
+            badgeBloqueo.className = 'badge-evento-bloqueado mt-1 inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-emerald-500/30 w-fit';
+            btn.appendChild(badgeBloqueo);
+          }
+          badgeBloqueo.innerText = yaHecho ? '✓ Ya registrado hoy' : '🔒 Paso anterior';
+        } else {
+          btn.disabled = false;
+          btn.classList.remove('opacity-45', 'cursor-not-allowed', 'pointer-events-none');
+          btn.classList.add('hover:bg-slate-700/40');
+          if (badgeBloqueo) badgeBloqueo.remove();
+        }
+      });
+
+      checkCanSubmit();
+    }
+
     function obtenerDeviceToken() {
       let token = localStorage.getItem('checkin_device_token');
       if (!token) {
@@ -1020,11 +1132,12 @@
 
     let empleados = JSON.parse(localStorage.getItem('checkin_employees')) || [];
     let historial = JSON.parse(localStorage.getItem('checkin_history')) || [];
-    localStorage.removeItem('checkin_admin_pin'); // ya no se usa PIN local de admin
+    localStorage.removeItem('checkin_admin_pin');
     
-    // LOGIN DE EMPRESA Y COLABORADOR ACTIVO
+    // LOGIN DE EMPRESA, LOGO Y COLABORADOR ACTIVO
     let companyPassword = 'empresa123';
     let companyName = 'HUBERT CHECKIN PRO';
+    let companyLogo = localStorage.getItem('checkin_company_logo') || '';
     let isCompanyLoggedIn = false;
     let activeLoggedInEmp = null;
 
@@ -1038,15 +1151,12 @@
     let currentLocation = null;
     let watchGpsId = null;
 
-    // Desfase en milisegundos entre la hora real de Internet y el reloj local del celular
     let serverTimeOffsetMs = 0;
     let isServerTimeSynced = false;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Cada paso va protegido: si uno falla o tarda, el resto de la página sigue funcionando
       const seguro = (fn) => { try { return fn(); } catch (e) { console.error('Error en el arranque:', e); } };
 
-      // 1) Lo que NO depende de internet se muestra de inmediato
       seguro(() => { if (window.lucide) lucide.createIcons(); });
 
       seguro(() => {
@@ -1068,7 +1178,9 @@
       seguro(bloquearAtajosTeclado);
       seguro(iniciarGPSContinuo);
       seguro(actualizarTextosEmpresa);
+      seguro(actualizarLogoEmpresaEnUI);
       seguro(actualizarBadgeHorario);
+      seguro(actualizarEstadoBotonesEventos);
 
       const poneFechaFalta = () => seguro(() => {
         const hoyStr = obtenerHoraActualCorregida().toISOString().split('T')[0];
@@ -1077,11 +1189,9 @@
       });
       poneFechaFalta();
 
-      // 2) Lo que depende de internet va después y no bloquea lo anterior
       try { await asegurarSesionAnonima(); } catch (e) { console.error('Error de sesión anónima:', e); }
       seguro(conectarSincronizacionFirebase);
 
-      // Al entrar/salir como administrador cambia el usuario de Firebase: se vuelven a conectar las escuchas
       if (auth) {
         let uidSincronizado = auth.currentUser ? auth.currentUser.uid : null;
         auth.onAuthStateChanged((u) => {
@@ -1097,9 +1207,109 @@
       seguro(updateClock);
       poneFechaFalta();
 
-      // Resincronizar hora cada 5 minutos
       setInterval(sincronizarHoraRedSilencioso, 300000);
     });
+
+    // =====================================================================
+    // GESTIÓN DEL LOGO / IMAGEN DE LA EMPRESA
+    // =====================================================================
+    function actualizarLogoEmpresaEnUI() {
+      const loginContainer = document.getElementById('login-company-logo-container');
+      const headerContainer = document.getElementById('header-company-logo-container');
+      const adminPreview = document.getElementById('cfg-company-logo-preview');
+      const adminHidden = document.getElementById('cfg-company-logo-base64');
+      const btnRemove = document.getElementById('btn-remove-company-logo');
+
+      if (adminHidden) adminHidden.value = companyLogo || '';
+
+      if (companyLogo) {
+        if (loginContainer) {
+          loginContainer.className = 'mx-auto bg-slate-800/80 border border-slate-700 rounded-2xl p-2 w-fit max-w-[220px] flex items-center justify-center overflow-hidden shadow-lg';
+          loginContainer.innerHTML = `<img src="${companyLogo}" alt="Logo Empresa" class="max-h-24 w-auto object-contain rounded-xl">`;
+        }
+        if (headerContainer) {
+          headerContainer.className = 'bg-slate-900 border border-slate-700 rounded-xl p-1 shadow-lg flex items-center justify-center overflow-hidden';
+          headerContainer.innerHTML = `<img src="${companyLogo}" alt="Logo Empresa" class="h-11 w-auto max-w-[140px] object-contain rounded-lg">`;
+        }
+        if (adminPreview) {
+          adminPreview.innerHTML = `<img src="${companyLogo}" alt="Logo Empresa" class="w-full h-full object-contain p-1">`;
+        }
+        if (btnRemove) btnRemove.classList.remove('hidden');
+      } else {
+        if (loginContainer) {
+          loginContainer.className = 'mx-auto p-4 bg-blue-600/10 border border-blue-500/20 text-blue-400 rounded-2xl w-fit flex items-center justify-center overflow-hidden';
+          loginContainer.innerHTML = `<i data-lucide="building-2" class="w-10 h-10"></i>`;
+        }
+        if (headerContainer) {
+          headerContainer.className = 'p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/20 flex items-center justify-center overflow-hidden';
+          headerContainer.innerHTML = `<i data-lucide="cloud-lightning" class="w-7 h-7 text-white"></i>`;
+        }
+        if (adminPreview) {
+          adminPreview.innerHTML = `<i data-lucide="building-2" class="w-7 h-7 text-slate-500"></i>`;
+        }
+        if (btnRemove) btnRemove.classList.add('hidden');
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function procesarLogoEmpresaSeleccionado(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxDim = 420;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Se usa PNG para conservar transparencia en logotipos si la tiene
+          const compressedLogo = canvas.toDataURL('image/png');
+          document.getElementById('cfg-company-logo-base64').value = compressedLogo;
+
+          const preview = document.getElementById('cfg-company-logo-preview');
+          if (preview) {
+            preview.innerHTML = `<img src="${compressedLogo}" alt="Vista previa logo" class="w-full h-full object-contain p-1">`;
+          }
+          document.getElementById('btn-remove-company-logo')?.classList.remove('hidden');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removerLogoEmpresaSeleccionado() {
+      const hiddenEl = document.getElementById('cfg-company-logo-base64');
+      const fileEl = document.getElementById('cfg-company-logo-file');
+      const previewEl = document.getElementById('cfg-company-logo-preview');
+      if (hiddenEl) hiddenEl.value = '';
+      if (fileEl) fileEl.value = '';
+      if (previewEl) {
+        previewEl.innerHTML = `<i data-lucide="building-2" class="w-7 h-7 text-slate-500"></i>`;
+      }
+      document.getElementById('btn-remove-company-logo')?.classList.add('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
 
     // =====================================================================
     // MANEJO DE LA VENTANA EMERGENTE (MODAL OPTIMISTA / DESCANSO)
@@ -1222,19 +1432,16 @@
         return;
       }
 
-      // VALIDAR HUELLA / CÓDIGO GOOGLE ÚNICAMENTE AQUÍ
       const huellaOk = await validarHuellaColaborador(empObj);
       if (!huellaOk) {
         if (empPinInput) empPinInput.value = '';
         return;
       }
 
-      // LOGIN CORRECTO - ASENTAR EN HISTORIAL Y EXCEL
       isCompanyLoggedIn = true;
       activeLoggedInEmp = empObj;
       document.getElementById('company-login-overlay').classList.add('hidden');
 
-      // Generar registro de Login de Empresa
       const horaOficialNet = obtenerHoraActualCorregida();
       const recordKey = `login_${horaOficialNet.getTime()}`;
       const record = {
@@ -1266,7 +1473,6 @@
         showToast('Acceso Correcto', `Bienvenido(a) ${empObj.name}. Sesión iniciada.`, 'success');
       }
       
-      // Auto-seleccionar al colaborador en la pantalla principal
       selectedEmployeeId = empObj.id;
       const searchInput = document.getElementById('employee-search-input');
       if (searchInput) searchInput.value = `${empObj.name} (${empObj.id})`;
@@ -1290,9 +1496,12 @@
       }
     }
 
-    function guardarConfiguracionEmpresa() {
+    async function guardarConfiguracionEmpresa() {
+      if (!verificarAdminFirebase()) return;
+
       const nameVal = document.getElementById('cfg-company-name')?.value.trim();
       const passVal = document.getElementById('cfg-company-pass')?.value.trim();
+      const logoVal = document.getElementById('cfg-company-logo-base64')?.value || '';
 
       if (!nameVal) {
         alert('Ingresa el nombre de la empresa.');
@@ -1300,27 +1509,42 @@
       }
 
       companyName = nameVal;
+      companyLogo = logoVal;
       if (passVal && passVal.length >= 4) {
         companyPassword = passVal;
+      }
+
+      if (companyLogo) {
+        localStorage.setItem('checkin_company_logo', companyLogo);
+      } else {
+        localStorage.removeItem('checkin_company_logo');
       }
 
       const updateObj = {
         name: companyName,
         password: companyPassword,
+        logo: companyLogo || null,
         officialEntryTime,
         toleranceMinutes
       };
 
-      if (companyConfigRef) {
-        companyConfigRef.update(updateObj);
+      try {
+        if (companyConfigRef) {
+          await companyConfigRef.update(updateObj);
+        }
+        actualizarTextosEmpresa();
+        actualizarLogoEmpresaEnUI();
+        document.getElementById('cfg-company-pass').value = '';
+        showToast('Configuración Guardada', 'Logo y datos de la empresa sincronizados en la nube.', 'success');
+      } catch (err) {
+        console.error('Error al guardar configuración de empresa:', err);
+        showToast('No se pudo guardar', mensajeErrorFirebase(err), 'error');
       }
-
-      actualizarTextosEmpresa();
-      document.getElementById('cfg-company-pass').value = '';
-      showToast('Configuración Guardada', 'Datos de la empresa sincronizados en la nube.', 'success');
     }
 
-    function guardarHorarioTolerancia() {
+    async function guardarHorarioTolerancia() {
+      if (!verificarAdminFirebase()) return;
+
       const entryVal = document.getElementById('cfg-entry-time')?.value;
       const tolVal = parseInt(document.getElementById('cfg-tolerance-min')?.value);
 
@@ -1340,23 +1564,26 @@
         officialEntryTime,
         toleranceMinutes,
         name: companyName,
-        password: companyPassword
+        password: companyPassword,
+        logo: companyLogo || null
       };
 
-      if (companyConfigRef) {
-        companyConfigRef.update(updateObj);
+      try {
+        if (companyConfigRef) {
+          await companyConfigRef.update(updateObj);
+        }
+        actualizarBadgeHorario();
+        showToast('Horario Guardado', `Entrada: ${officialEntryTime} | Tolerancia: ${toleranceMinutes} minutos`, 'success');
+      } catch (err) {
+        console.error('Error al guardar horario:', err);
+        showToast('No se pudo guardar', mensajeErrorFirebase(err), 'error');
       }
-
-      actualizarBadgeHorario();
-      showToast('Horario Guardado', `Entrada: ${officialEntryTime} | Tolerancia: ${toleranceMinutes} minutos`, 'success');
     }
 
     // =====================================================================
     // OBTENCIÓN Y VALIDACIÓN DE HORA OFICIAL DE RED (NTP / APIs DE TIEMPO)
     // =====================================================================
-    // Caché de la última hora verificada en red. Usa performance.now() (reloj monótono),
-    // así NO se puede falsear cambiando la hora del celular.
-    let horaRedCache = null; // { netMs, perfMs }
+    let horaRedCache = null;
     const HORA_CACHE_MAX_MS = 90 * 1000;
 
     function consultarProveedorHora(url, extraer, ms) {
@@ -1380,12 +1607,10 @@
     }
 
     async function obtenerHoraServidor() {
-      // 1) Si se verificó hace menos de 90 s, se reutiliza (instantáneo)
       if (horaRedCache && (performance.now() - horaRedCache.perfMs) < HORA_CACHE_MAX_MS) {
         return new Date(horaRedCache.netMs + (performance.now() - horaRedCache.perfMs));
       }
 
-      // 2) Se consultan TODOS los proveedores a la vez y gana el primero que responda
       const proveedores = [
         new Promise((resolve, reject) => {
           if (!db) return reject(new Error('sin db'));
@@ -1609,7 +1834,6 @@
         return;
       }
 
-      // 1) Correo y contraseña
       let cred;
       try {
         cred = await auth.signInWithEmailAndPassword(email, pass);
@@ -1630,7 +1854,6 @@
         return;
       }
 
-      // 2) Verificar en la base de datos que este UID sea administrador: /admins/<UID> = true
       let esAdmin = false;
       try {
         const snap = await db.ref('admins/' + cred.user.uid).once('value');
@@ -1657,10 +1880,10 @@
       isAdminActive = true;
       document.getElementById('admin-section').classList.remove('hidden');
       document.getElementById('btn-admin-text').innerText = 'Salir de Admin';
+      actualizarLogoEmpresaEnUI();
       showToast('Acceso Concedido', 'Bienvenido al panel de administración.', 'success');
     }
 
-    // Recarga los datos desde la nube SIN cerrar la sesión de administrador ni pedir contraseña
     async function refrescarInformacionAdmin() {
       const btn = document.getElementById('btn-refresh-admin');
       const txt = document.getElementById('txt-refresh-admin');
@@ -1676,13 +1899,10 @@
       if (txt) txt.innerText = 'Actualizando...';
 
       try {
-        // 1) Renueva el permiso de la sesión actual (evita errores de permisos por sesión vencida)
         await auth.currentUser.getIdToken(true);
-        // 2) Reinicia la conexión con la base de datos y vuelve a leer todo desde el servidor
         if (db) { db.goOffline(); db.goOnline(); }
         conectarSincronizacionFirebase();
         await Promise.all([ historyRef.once('value'), employeesRef.once('value') ]);
-        // 3) Redibuja pantallas
         programarRenderHistorial();
         renderEmployeesTable();
         renderEmployeeSelect();
@@ -1712,6 +1932,9 @@
 
       if (tabName === 'hours') {
         renderHoursTable();
+      }
+      if (tabName === 'config') {
+        actualizarLogoEmpresaEnUI();
       }
     }
 
@@ -1835,7 +2058,7 @@
         `;
         pinContainer.classList.add('hidden');
         if (window.lucide) lucide.createIcons();
-        checkCanSubmit();
+        actualizarEstadoBotonesEventos();
         return;
       }
 
@@ -1850,6 +2073,11 @@
           statusDispositivo = '<span class="text-amber-400">Se vinculará tu huella al iniciar sesión</span>';
         }
 
+        const completadosHoy = obtenerEventosRegistradosHoy(emp.id);
+        const resumenHoyHtml = completadosHoy.size > 0
+          ? `<p class="text-[11px] text-emerald-300 mt-1">Marcas hoy: ${Array.from(completadosHoy).join(' · ')}</p>`
+          : `<p class="text-[11px] text-slate-500 mt-1">Sin marcas registradas hoy</p>`;
+
         const photoHtml = emp.photo 
           ? `<img src="${emp.photo}" class="w-16 h-16 rounded-full object-cover border-2 border-blue-500 shadow-md flex-shrink-0">`
           : `<div class="p-3 bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-full flex-shrink-0"><i data-lucide="user-check" class="w-8 h-8"></i></div>`;
@@ -1861,16 +2089,26 @@
               <h3 class="font-bold text-white text-base truncate">${emp.name}</h3>
               <p class="text-xs text-slate-400">ID: <span class="text-slate-200 font-mono">${emp.id}</span> | Depto: <span class="text-slate-200">${emp.dept}</span></p>
               <p class="text-[11px] mt-1">${statusDispositivo}</p>
+              ${resumenHoyHtml}
             </div>
           </div>
         `;
         pinContainer.classList.remove('hidden');
         if (window.lucide) lucide.createIcons();
       }
-      checkCanSubmit();
+      actualizarEstadoBotonesEventos();
     }
 
     function setEventType(type) {
+      if (selectedEmployeeId) {
+        const motivoBloqueo = validarEventoPermitidoHoy(selectedEmployeeId, type);
+        if (motivoBloqueo) {
+          showToast('Evento no disponible', motivoBloqueo, 'error');
+          actualizarEstadoBotonesEventos();
+          return;
+        }
+      }
+
       selectedEventType = type;
       
       document.querySelectorAll('.event-btn').forEach(btn => {
@@ -1903,9 +2141,11 @@
 
     function checkCanSubmit() {
       const btn = document.getElementById('btn-submit-checkin');
+      if (!btn) return;
       const pinVal = document.getElementById('employee-pin-input')?.value || '';
+      const permitido = selectedEmployeeId && selectedEventType && !validarEventoPermitidoHoy(selectedEmployeeId, selectedEventType);
 
-      if (selectedEmployeeId && selectedEventType && pinVal.length >= 4) {
+      if (permitido && pinVal.length >= 4) {
         btn.disabled = false;
         btn.className = 'w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg rounded-xl shadow-lg transition flex items-center justify-center gap-3 cursor-pointer active:scale-[0.99]';
       } else {
@@ -2253,7 +2493,7 @@
     }
 
     // =====================================================================
-    // REGISTRO DE ASISTENCIA RÁPIDO (MODIFICADO PARA USAR CLOUD FUNCTION SEGURA)
+    // REGISTRO DE ASISTENCIA RÁPIDO (CLOUD FUNCTION SEGURA + BLOQUEO)
     // =====================================================================
     let registrandoAhora = false;
     async function registrarAsistencia() {
@@ -2279,6 +2519,15 @@
 
       const emp = empleados.find(e => e.id === selectedEmployeeId);
       if (!emp) {
+        checkCanSubmit();
+        return;
+      }
+
+      // Verificar que no se repita un evento ya registrado hoy ni un paso anterior
+      const motivoBloqueo = validarEventoPermitidoHoy(emp.id, selectedEventType);
+      if (motivoBloqueo) {
+        showToast('Registro bloqueado', motivoBloqueo, 'error');
+        actualizarEstadoBotonesEventos();
         checkCanSubmit();
         return;
       }
@@ -2350,7 +2599,6 @@
       }
 
       try {
-// LLAMADA SEGURA A LA CLOUD FUNCTION DESPLEGADA
         const registrarAsistenciaSegura = firebase.functions().httpsCallable('registrarAsistenciaSegura');
         
         const respuesta = await registrarAsistenciaSegura({
@@ -2360,7 +2608,6 @@
           deviceToken: currentDeviceToken,
           location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 }
         });
- 
 
         const record = respuesta.data.record;
         if (record && !historial.some(h => h.id === record.id && h.empId === record.empId && h.eventType === record.eventType)) {
@@ -2377,7 +2624,6 @@
 
         showToast(tolResult.retardo ? 'Entrada con Retardo' : '¡Registro Exitoso!', msgToast, tolResult.retardo ? 'error' : 'success');
 
-        // Mostrar modal animado
         mostrarModalMotivacion(selectedEventType, emp);
 
         selectedEventType = '';
@@ -2396,6 +2642,7 @@
         console.error("Error en Cloud Function:", error);
         alert("Aviso de seguridad del servidor: " + (error.message || error));
       } finally {
+        actualizarEstadoBotonesEventos();
         checkCanSubmit();
       }
     }
@@ -2470,6 +2717,7 @@
 
         renderHistoryTable();
         renderHoursTable();
+        actualizarEstadoBotonesEventos();
         showToast('Registro Eliminado', 'Marcaje removido del sistema.', 'info');
       }
     }
@@ -2569,7 +2817,9 @@
       renderHistoryTable();
     }
 
+    // =====================================================================
     // EXPORTACIÓN A EXCEL
+    // =====================================================================
     function exportToExcel() {
       if (historial.length === 0 && empleados.length === 0) {
         alert('No hay información registrada para exportar.');
@@ -2677,7 +2927,6 @@
       return c ? `${c.dia} de ${MESES_CORTOS[c.mes - 1]}` : '';
     }
 
-    // Días que faltan para el próximo cumpleaños (0 = hoy)
     function diasParaCumple(emp) {
       const c = partesCumple(emp);
       if (!c) return null;
@@ -2829,7 +3078,6 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    // Verifica que haya sesión de administrador activa en Firebase antes de escribir
     function verificarAdminFirebase() {
       if (!auth || !auth.currentUser || !adminUidVerificado || auth.currentUser.uid !== adminUidVerificado) {
         showToast('Sesión de administrador requerida', 'Sal de Modo Administrador y vuelve a entrar con tu correo y contraseña.', 'error');
@@ -2895,7 +3143,6 @@
       try {
         if (!employeesRef) throw new Error('La base de datos no está conectada.');
         await employeesRef.child(newKey).set(empData);
-        // Si cambió el ID al editar, se elimina el registro anterior
         if (oldKey && oldKey !== newKey) {
           await employeesRef.child(oldKey).remove();
         }
@@ -2978,7 +3225,6 @@
         if (emp && emp._key) llaves.add(emp._key);
         llaves.add(String(empId).replace(/[^a-zA-Z0-9]/g, '_'));
 
-        // También se busca por el campo "id" para borrar sin importar cómo se guardó la llave
         const snap = await employeesRef.once('value');
         const val = snap.val() || {};
         Object.keys(val).forEach(k => {
@@ -2994,7 +3240,6 @@
         return;
       }
 
-      // La lista se refresca sola cuando Firebase confirma el cambio
       showToast('Eliminado', 'Colaborador removido de la lista.', 'info');
     }
 
@@ -3054,7 +3299,8 @@
         }
         renderHistoryTable();
         renderHoursTable();
-        showToast('Historial Limpio', 'Se borraron todas las marcajes.', 'info');
+        actualizarEstadoBotonesEventos();
+        showToast('Historial Limpio', 'Se borraron todos los marcajes.', 'info');
       }
     }
 
