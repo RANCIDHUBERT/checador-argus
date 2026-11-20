@@ -446,6 +446,9 @@
         </div>
       </div>
 
+      <!-- AVISO DE CUMPLEAÑOS (visible en todas las pestañas del panel) -->
+      <div id="birthday-banner" class="hidden bg-pink-500/10 border border-pink-500/30 rounded-xl p-4"></div>
+
       <!-- TAB 1: HISTORIAL DE REGISTROS CON MAPA GPS, RETARDOS Y FALTAS -->
       <div id="admin-tab-history" class="flex flex-col gap-4">
         <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/60 p-4 rounded-xl border border-slate-700/50">
@@ -469,6 +472,10 @@
 
           <!-- BOTÓN ÚNICO DE EXPORTACIÓN A EXCEL COMPLETO -->
           <div class="flex items-center gap-2">
+            <button id="btn-refresh-admin" onclick="refrescarInformacionAdmin()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-md" title="Vuelve a cargar los datos de la nube sin salir del modo administrador">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+              <span id="txt-refresh-admin">Actualizar datos</span>
+            </button>
             <button onclick="exportToExcel()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-md">
               <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
               <span>Descargar Excel (.xlsx)</span>
@@ -617,6 +624,14 @@
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Departamento</label>
               <input type="text" id="emp-dept" required placeholder="Ej. Taller / Producción" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-pink-400 mb-1 flex items-center gap-1">
+                <i data-lucide="cake" class="w-3.5 h-3.5"></i>
+                Fecha de Nacimiento (para felicitar su cumpleaños)
+              </label>
+              <input type="date" id="emp-birth" class="w-full bg-slate-800 border border-pink-500/40 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500">
             </div>
 
             <div>
@@ -841,11 +856,30 @@
       }
     }
 
+    // Agrupa varios cambios seguidos de Firebase en UN solo redibujado de las tablas
+    let renderHistorialTimer = null;
+    function programarRenderHistorial() {
+      if (renderHistorialTimer) return;
+      renderHistorialTimer = setTimeout(() => {
+        renderHistorialTimer = null;
+        try { renderHistoryTable(); } catch (e) { console.error('Error al dibujar historial:', e); }
+        try { renderHoursTable(); } catch (e) { console.error('Error al dibujar horas:', e); }
+      }, 80);
+    }
+
     function conectarSincronizacionFirebase() {
       if (!db || !historyRef || !employeesRef) {
         console.warn("Base de datos no inicializada. Sincronización omitida.");
         return;
       }
+
+      // Si ya había escuchas activas (por ejemplo, antes de entrar como administrador), se quitan
+      // para volver a conectarlas con la sesión actual y no duplicarlas.
+      try {
+        historyRef.off('value');
+        employeesRef.off('value');
+        if (companyConfigRef) companyConfigRef.off('value');
+      } catch (e) { console.warn('No se pudieron quitar escuchas previas:', e); }
 
       // 1. Escuchar Historial de Asistencias
       historyRef.on('value', (snapshot) => {
@@ -858,8 +892,7 @@
             historial = [];
             localStorage.removeItem('checkin_history');
           }
-          renderHistoryTable();
-          renderHoursTable();
+          programarRenderHistorial();
         } catch (e) {
           console.error("Error al procesar snapshot de historial:", e);
         }
@@ -1048,6 +1081,18 @@
       try { await asegurarSesionAnonima(); } catch (e) { console.error('Error de sesión anónima:', e); }
       seguro(conectarSincronizacionFirebase);
 
+      // Al entrar/salir como administrador cambia el usuario de Firebase: se vuelven a conectar las escuchas
+      if (auth) {
+        let uidSincronizado = auth.currentUser ? auth.currentUser.uid : null;
+        auth.onAuthStateChanged((u) => {
+          const uid = u ? u.uid : null;
+          if (uid && uid !== uidSincronizado) {
+            uidSincronizado = uid;
+            seguro(conectarSincronizacionFirebase);
+          }
+        });
+      }
+
       try { await sincronizarHoraRedSilencioso(); } catch (e) { console.error('Error al sincronizar hora:', e); }
       seguro(updateClock);
       poneFechaFalta();
@@ -1059,7 +1104,7 @@
     // =====================================================================
     // MANEJO DE LA VENTANA EMERGENTE (MODAL OPTIMISTA / DESCANSO)
     // =====================================================================
-    function mostrarModalMotivacion(tipoEvento) {
+    function mostrarModalMotivacion(tipoEvento, empCumple) {
       const modal = document.getElementById('motivation-modal');
       const titleEl = document.getElementById('modal-title');
       const subtitleEl = document.getElementById('modal-subtitle');
@@ -1078,6 +1123,16 @@
         subtitleEl.className = "text-xs font-semibold uppercase tracking-wider text-emerald-400";
         iconBg.className = "mx-auto p-5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl w-fit";
         if (iconEl) iconEl.setAttribute('data-lucide', 'sparkles');
+
+        if (tipoEvento === 'Entrada' && empCumple && esCumpleHoy(empCumple)) {
+          const primerNombre = String(empCumple.name || '').trim().split(/\s+/)[0] || '';
+          titleEl.innerText = `🎂 ¡Feliz cumpleaños, ${primerNombre}!`;
+          subtitleEl.innerText = "Hoy es tu día especial";
+          subtitleEl.className = "text-xs font-semibold uppercase tracking-wider text-pink-400";
+          iconBg.className = "mx-auto p-5 bg-pink-500/10 border border-pink-500/20 text-pink-400 rounded-2xl w-fit";
+          if (iconEl) iconEl.setAttribute('data-lucide', 'cake');
+          fraseElegida = "Todo el equipo te desea un día lleno de alegría, buenos momentos y muchas bendiciones. ¡Que cumplas muchísimos más!";
+        }
       } else {
         const idx = Math.floor(Math.random() * MENSAJES_DESCANSO_SALIDA.length);
         fraseElegida = MENSAJES_DESCANSO_SALIDA[idx];
@@ -1205,7 +1260,11 @@
       historial.unshift(record);
       localStorage.setItem('checkin_history', JSON.stringify(historial));
 
-      showToast('Acceso Correcto', `Bienvenido(a) ${empObj.name}. Sesión iniciada.`, 'success');
+      if (esCumpleHoy(empObj)) {
+        showToast('🎂 ¡Feliz cumpleaños!', `${empObj.name}, todo el equipo te desea un día excelente.`, 'success');
+      } else {
+        showToast('Acceso Correcto', `Bienvenido(a) ${empObj.name}. Sesión iniciada.`, 'success');
+      }
       
       // Auto-seleccionar al colaborador en la pantalla principal
       selectedEmployeeId = empObj.id;
@@ -1599,6 +1658,43 @@
       document.getElementById('admin-section').classList.remove('hidden');
       document.getElementById('btn-admin-text').innerText = 'Salir de Admin';
       showToast('Acceso Concedido', 'Bienvenido al panel de administración.', 'success');
+    }
+
+    // Recarga los datos desde la nube SIN cerrar la sesión de administrador ni pedir contraseña
+    async function refrescarInformacionAdmin() {
+      const btn = document.getElementById('btn-refresh-admin');
+      const txt = document.getElementById('txt-refresh-admin');
+      if (!btn || btn.dataset.busy === '1') return;
+
+      if (!auth || !auth.currentUser || !adminUidVerificado || auth.currentUser.uid !== adminUidVerificado) {
+        showToast('Sesión de administrador requerida', 'Sal de Modo Administrador y vuelve a entrar con tu correo y contraseña.', 'error');
+        return;
+      }
+
+      btn.dataset.busy = '1';
+      btn.classList.add('opacity-70', 'cursor-wait');
+      if (txt) txt.innerText = 'Actualizando...';
+
+      try {
+        // 1) Renueva el permiso de la sesión actual (evita errores de permisos por sesión vencida)
+        await auth.currentUser.getIdToken(true);
+        // 2) Reinicia la conexión con la base de datos y vuelve a leer todo desde el servidor
+        if (db) { db.goOffline(); db.goOnline(); }
+        conectarSincronizacionFirebase();
+        await Promise.all([ historyRef.once('value'), employeesRef.once('value') ]);
+        // 3) Redibuja pantallas
+        programarRenderHistorial();
+        renderEmployeesTable();
+        renderEmployeeSelect();
+        showToast('Información actualizada', 'Se cargaron los datos más recientes de la nube.', 'success');
+      } catch (err) {
+        console.error('Error al actualizar información:', err);
+        showToast('No se pudo actualizar', mensajeErrorFirebase(err), 'error');
+      } finally {
+        btn.dataset.busy = '0';
+        btn.classList.remove('opacity-70', 'cursor-wait');
+        if (txt) txt.innerText = 'Actualizar datos';
+      }
     }
 
     function showAdminTab(tabName) {
@@ -2267,6 +2363,9 @@
  
 
         const record = respuesta.data.record;
+        if (record && !historial.some(h => h.id === record.id && h.empId === record.empId && h.eventType === record.eventType)) {
+          historial.unshift(record);
+        }
         let tolResult = record.toleranciaStatus || { retardo: false, minutosDelay: 0, statusLabel: 'N/A' };
 
         playSuccessSound();
@@ -2279,7 +2378,7 @@
         showToast(tolResult.retardo ? 'Entrada con Retardo' : '¡Registro Exitoso!', msgToast, tolResult.retardo ? 'error' : 'success');
 
         // Mostrar modal animado
-        mostrarModalMotivacion(selectedEventType);
+        mostrarModalMotivacion(selectedEventType, emp);
 
         selectedEventType = '';
         selectedEmployeeId = '';
@@ -2395,7 +2494,10 @@
         return;
       }
 
-      tbody.innerHTML = filtered.map(item => {
+      const MAX_FILAS_HISTORIAL = 200;
+      const visibles = filtered.slice(0, MAX_FILAS_HISTORIAL);
+
+      tbody.innerHTML = visibles.map(item => {
         let badgeColor = 'bg-blue-500/20 text-blue-300 border-blue-500/30';
         if (item.eventType === 'Login Empresa') badgeColor = 'bg-purple-500/20 text-purple-300 border-purple-500/30 font-bold';
         if (item.eventType === 'Entrada') badgeColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
@@ -2453,7 +2555,9 @@
             </td>
           </tr>
         `;
-      }).join('');
+      }).join('') + (filtered.length > MAX_FILAS_HISTORIAL
+        ? `<tr><td colspan="9" class="p-4 text-center text-xs text-slate-500">Mostrando los ${MAX_FILAS_HISTORIAL} registros más recientes de ${filtered.length}. Usa los filtros (nombre, fecha o evento) para ver otros. El Excel incluye todos.</td></tr>`
+        : '');
 
       if (window.lucide) lucide.createIcons();
     }
@@ -2556,10 +2660,74 @@
       showToast('Excel Generado', 'Reporte exportado con tolerancias, retardos y logins incluidos.', 'success');
     }
 
+    // =====================================================================
+    // CUMPLEAÑOS DE COLABORADORES
+    // =====================================================================
+    const MESES_CORTOS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+    function partesCumple(emp) {
+      if (!emp || !emp.fechaNacimiento) return null;
+      const p = String(emp.fechaNacimiento).split('-').map(Number);
+      if (p.length < 3 || !p[1] || !p[2]) return null;
+      return { mes: p[1], dia: p[2] };
+    }
+
+    function textoCumple(emp) {
+      const c = partesCumple(emp);
+      return c ? `${c.dia} de ${MESES_CORTOS[c.mes - 1]}` : '';
+    }
+
+    // Días que faltan para el próximo cumpleaños (0 = hoy)
+    function diasParaCumple(emp) {
+      const c = partesCumple(emp);
+      if (!c) return null;
+      const h = obtenerHoraActualCorregida();
+      const hoy = new Date(h.getFullYear(), h.getMonth(), h.getDate());
+      let prox = new Date(h.getFullYear(), c.mes - 1, c.dia);
+      if (prox < hoy) prox = new Date(h.getFullYear() + 1, c.mes - 1, c.dia);
+      return Math.round((prox - hoy) / 86400000);
+    }
+
+    function esCumpleHoy(emp) {
+      return diasParaCumple(emp) === 0;
+    }
+
+    function renderCumpleanos() {
+      const cont = document.getElementById('birthday-banner');
+      if (!cont) return;
+
+      const lista = empleados
+        .map(emp => ({ emp, dias: diasParaCumple(emp) }))
+        .filter(x => x.dias !== null && x.dias <= 7)
+        .sort((a, b) => a.dias - b.dias);
+
+      if (lista.length === 0) {
+        cont.classList.add('hidden');
+        cont.innerHTML = '';
+        return;
+      }
+
+      const escapar = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+      const filas = lista.map(({ emp, dias }) => {
+        const cuando = dias === 0 ? '<span class="font-bold text-pink-200">¡HOY!</span>'
+                     : dias === 1 ? 'mañana'
+                     : `en ${dias} días (${textoCumple(emp)})`;
+        return `<li>🎂 <strong class="text-white">${escapar(emp.name)}</strong> cumple años ${cuando}</li>`;
+      }).join('');
+
+      cont.innerHTML = `
+        <div class="font-bold text-pink-300 text-sm mb-1.5">🎉 Cumpleaños de esta semana</div>
+        <ul class="text-xs text-pink-100/90 flex flex-col gap-1">${filas}</ul>
+      `;
+      cont.classList.remove('hidden');
+    }
+
     function renderEmployeesTable() {
       const tbody = document.getElementById('employees-table-body');
       if (!tbody) return;
       
+      try { renderCumpleanos(); } catch (e) { console.error('Error en cumpleaños:', e); }
+
       if (empleados.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">No hay empleados registrados.</td></tr>`;
         return;
@@ -2583,7 +2751,7 @@
           <tr class="hover:bg-slate-700/30 transition">
             <td class="p-3.5">${photoImg}</td>
             <td class="p-3.5 font-mono text-slate-300">${emp.id}</td>
-            <td class="p-3.5 font-medium text-white">${emp.name}</td>
+            <td class="p-3.5 font-medium text-white">${emp.name}${emp.fechaNacimiento ? `<div class="text-[11px] font-normal text-pink-300 mt-0.5">🎂 ${textoCumple(emp)}</div>` : ''}</td>
             <td class="p-3.5 text-slate-400">${emp.dept}</td>
             <td class="p-3.5">${deviceBadge}${huellaBadge}</td>
             <td class="p-3.5 text-right flex justify-end gap-2">
@@ -2684,6 +2852,7 @@
       const name = document.getElementById('emp-name').value.trim();
       const dept = document.getElementById('emp-dept').value.trim();
       const pin = document.getElementById('emp-pin').value.trim();
+      const fechaNacimiento = document.getElementById('emp-birth').value || null;
       const photo = document.getElementById('emp-photo-base64').value || null;
 
       if (!id || !name || !dept || !pin) {
@@ -2704,6 +2873,7 @@
         name, 
         dept, 
         pin,
+        fechaNacimiento,
         photo: photo || (existingEmp ? existingEmp.photo || null : null),
         registeredDeviceToken: existingEmp ? (existingEmp.registeredDeviceToken || null) : null,
         credId: existingEmp ? (existingEmp.credId || null) : null,
@@ -2755,6 +2925,7 @@
       document.getElementById('emp-name').value = emp.name;
       document.getElementById('emp-dept').value = emp.dept;
       document.getElementById('emp-pin').value = emp.pin || '';
+      document.getElementById('emp-birth').value = emp.fechaNacimiento || '';
       document.getElementById('emp-photo-base64').value = emp.photo || '';
 
       const previewContainer = document.getElementById('emp-photo-preview-container');
