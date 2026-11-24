@@ -1005,7 +1005,9 @@
         return true;
       } catch (err) {
         console.error('Error de autenticación anónima:', err);
-        showToast('Sin autenticación', 'No se pudo iniciar sesión segura con Firebase. Revisa la apiKey y que Authentication anónimo esté activado.', 'error');
+        if (navigator.onLine) {
+          showToast('Sin autenticación', 'No se pudo iniciar sesión segura con Firebase. Revisa la apiKey y que Authentication anónimo esté activado.', 'error');
+        }
         return false;
       }
     }
@@ -1037,12 +1039,24 @@
       historyRef.on('value', (snapshot) => {
         try {
           const val = snapshot.val();
+          const pendientesLocales = historial.filter(h => h && h.offlinePending);
           if (val) {
-            historial = Object.values(val).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            const remotos = Object.values(val);
+            const combinados = [...remotos];
+            pendientesLocales.forEach(p => {
+              if (!combinados.some(r => r.id === p.id && r.empId === p.empId && r.eventType === p.eventType)) {
+                combinados.push(p);
+              }
+            });
+            historial = combinados.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             localStorage.setItem('checkin_history', JSON.stringify(historial));
           } else {
-            historial = [];
-            localStorage.removeItem('checkin_history');
+            historial = pendientesLocales.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            if (historial.length > 0) {
+              localStorage.setItem('checkin_history', JSON.stringify(historial));
+            } else {
+              localStorage.removeItem('checkin_history');
+            }
           }
           programarRenderHistorial();
         } catch (e) {
@@ -1360,6 +1374,7 @@
       seguro(actualizarLogoEmpresaEnUI);
       seguro(actualizarBadgeHorario);
       seguro(actualizarEstadoBotonesEventos);
+      seguro(actualizarIndicadorPendientes);
 
       const poneFechaFalta = () => seguro(() => {
         const hoyStr = obtenerHoraActualCorregida().toISOString().split('T')[0];
@@ -1372,6 +1387,7 @@
 
       try { await asegurarSesionAnonima(); } catch (e) { console.error('Error de sesión anónima:', e); }
       seguro(conectarSincronizacionFirebase);
+      seguro(sincronizarColaOffline);
 
       if (auth) {
         let uidSincronizado = auth.currentUser ? auth.currentUser.uid : null;
@@ -1380,6 +1396,7 @@
           if (uid && uid !== uidSincronizado) {
             uidSincronizado = uid;
             seguro(conectarSincronizacionFirebase);
+            seguro(sincronizarColaOffline);
           }
         });
       }
@@ -1664,8 +1681,8 @@
         timestamp: horaOficialNet.getTime()
       };
 
-      if (historyRef) {
-        historyRef.child(recordKey).set(record);
+      if (historyRef && navigator.onLine) {
+        historyRef.child(recordKey).set(record).catch(() => {});
       }
 
       historial.unshift(record);
@@ -1685,6 +1702,7 @@
       if (passInput) passInput.value = '';
       if (empPinInput) empPinInput.value = '';
       renderHistoryTable();
+      sincronizarColaOffline();
     }
 
     function cerrarSesionEmpresa() {
@@ -1811,6 +1829,9 @@
     }
 
     async function obtenerHoraServidor() {
+      if (!navigator.onLine) {
+        throw new Error("Sin conexión a internet");
+      }
       if (horaRedCache && (performance.now() - horaRedCache.perfMs) < HORA_CACHE_MAX_MS) {
         return new Date(horaRedCache.netMs + (performance.now() - horaRedCache.perfMs));
       }
@@ -1844,6 +1865,17 @@
     async function sincronizarHoraRedSilencioso() {
       const timeBox = document.getElementById('time-server-text');
       const timeBadge = document.getElementById('network-time-badge');
+      if (!navigator.onLine) {
+        isServerTimeSynced = false;
+        if (timeBox) {
+          timeBox.innerHTML = `<span class="text-amber-300 font-semibold">Modo Offline: usando hora del equipo</span>`;
+        }
+        if (timeBadge) {
+          timeBadge.className = 'px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md font-mono';
+          timeBadge.innerText = 'Offline';
+        }
+        return;
+      }
       try {
         const networkDate = await obtenerHoraServidor();
         serverTimeOffsetMs = networkDate.getTime() - Date.now();
@@ -1859,11 +1891,11 @@
       } catch (err) {
         isServerTimeSynced = false;
         if (timeBox) {
-          timeBox.innerHTML = `<span class="text-rose-400 font-semibold">⚠️ Error al validar hora de Internet</span>`;
+          timeBox.innerHTML = `<span class="text-amber-300 font-semibold">Hora local activa (sin red NTP)</span>`;
         }
         if (timeBadge) {
-          timeBadge.className = 'px-1.5 py-0.5 text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-md font-mono';
-          timeBadge.innerText = 'NTP Error';
+          timeBadge.className = 'px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md font-mono';
+          timeBadge.innerText = 'Local';
         }
       }
     }
@@ -1894,7 +1926,7 @@
         gain2.gain.setValueAtTime(0.25, audioCtx.currentTime + 0.12);
         gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
         osc2.connect(gain2);
-        gain2.connect(audioCtx.destination);
+        osc2.connect(audioCtx.destination);
         osc2.start(audioCtx.currentTime + 0.12);
         osc2.stop(audioCtx.currentTime + 0.35);
       } catch (err) {
@@ -2700,12 +2732,16 @@
           return true;
         }
 
+        if (!navigator.onLine) {
+          return true;
+        }
+
         showToast('Vincula tu huella', 'Coloca tu dedo en el sensor para vincularla a este equipo.', 'info');
         const datos = await enrolarHuella(emp);
         Object.assign(emp, datos);
         localStorage.setItem('checkin_employees', JSON.stringify(empleados));
         if (employeesRef) {
-          employeesRef.child(emp._key || emp.id.replace(/[^a-zA-Z0-9]/g, '_')).update(datos);
+          employeesRef.child(emp._key || emp.id.replace(/[^a-zA-Z0-9]/g, '_')).update(datos).catch(() => {});
         }
         showToast('Huella vinculada', 'Tu huella quedó ligada a este equipo.', 'success');
         return true;
@@ -2902,7 +2938,112 @@
     }
 
     // =====================================================================
-    // REGISTRO DE ASISTENCIA RÁPIDO (2 DISPOSITIVOS + BLOQUEO DUPLICADOS)
+    // GUARDADO EN TELÉFONO OFFLINE Y ENVÍO AUTOMÁTICO AL TENER DATOS
+    // =====================================================================
+    function obtenerColaOffline() {
+      try {
+        return JSON.parse(localStorage.getItem('checkin_offline_queue') || '[]');
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function guardarColaOffline(cola) {
+      localStorage.setItem('checkin_offline_queue', JSON.stringify(cola));
+      actualizarIndicadorPendientes();
+    }
+
+    function actualizarIndicadorPendientes() {
+      const cola = obtenerColaOffline();
+      const badge = document.getElementById('cloud-status-badge');
+      if (!badge) return;
+
+      if (cola.length > 0) {
+        badge.className = 'text-xs px-2.5 py-1 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded-full font-medium flex items-center gap-1.5';
+        badge.innerHTML = `<i data-lucide="clock" class="w-3.5 h-3.5"></i> ${cola.length} pendiente(s) por enviar`;
+        if (window.lucide) lucide.createIcons();
+      } else if (navigator.onLine) {
+        badge.className = 'text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-medium flex items-center gap-1.5';
+        badge.innerHTML = `<i data-lucide="wifi" class="w-3.5 h-3.5"></i> Conectado`;
+        if (window.lucide) lucide.createIcons();
+      } else {
+        badge.className = 'text-xs px-2.5 py-1 bg-rose-500/15 text-rose-300 border border-rose-500/30 rounded-full font-medium flex items-center gap-1.5';
+        badge.innerHTML = `<i data-lucide="wifi" class="w-3.5 h-3.5"></i> Sin conexión`;
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    let sincronizandoCola = false;
+    async function sincronizarColaOffline() {
+      if (sincronizandoCola || !navigator.onLine) return;
+      const cola = obtenerColaOffline();
+      if (cola.length === 0) {
+        actualizarIndicadorPendientes();
+        return;
+      }
+
+      sincronizandoCola = true;
+      const pendientes = [];
+      let enviados = 0;
+
+      try {
+        await asegurarSesionAnonima();
+        const registrarAsistenciaSegura = firebase.functions().httpsCallable('registrarAsistenciaSegura');
+
+        for (const item of cola) {
+          try {
+            await registrarAsistenciaSegura(item.payload);
+            enviados++;
+
+            const idx = historial.findIndex(h => h.id === item.record.id && h.empId === item.record.empId);
+            if (idx >= 0) {
+              historial[idx].offlinePending = false;
+              historial[idx].observaciones = (historial[idx].observaciones || '').replace(' [Pendiente de sincronizar]', '');
+            }
+          } catch (err) {
+            const code = (err && err.code) || '';
+            const errorDeRed = !navigator.onLine || code === 'functions/internal' || code === 'functions/unavailable' || code === 'functions/deadline-exceeded' || /network|offline|fetch/i.test(err.message || '');
+            if (errorDeRed) {
+              pendientes.push(item);
+            } else {
+              console.warn('Registro rechazado por servidor:', code, err.message);
+            }
+          }
+        }
+
+        guardarColaOffline(pendientes);
+        localStorage.setItem('checkin_history', JSON.stringify(historial));
+        renderHistoryTable();
+        renderHoursTable();
+
+        if (enviados > 0) {
+          showToast('Datos enviados', `Se sincronizaron ${enviados} registro(s) con la aplicación web.`, 'success');
+        }
+      } finally {
+        sincronizandoCola = false;
+        actualizarIndicadorPendientes();
+      }
+    }
+
+    window.addEventListener('online', () => {
+      actualizarIndicadorPendientes();
+      sincronizarColaOffline();
+      sincronizarHoraRedSilencioso();
+    });
+    window.addEventListener('offline', actualizarIndicadorPendientes);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        sincronizarColaOffline();
+      }
+    });
+    setInterval(() => {
+      if (navigator.onLine && obtenerColaOffline().length > 0) {
+        sincronizarColaOffline();
+      }
+    }, 20000);
+
+    // =====================================================================
+    // REGISTRO DE ASISTENCIA RÁPIDO (2 DISPOSITIVOS + BLOQUEO DUPLICADOS + OFFLINE)
     // =====================================================================
     let registrandoAhora = false;
     async function registrarAsistencia() {
@@ -3013,11 +3154,11 @@
         emp.registeredDeviceToken = nuevosEquipos[0];
         localStorage.setItem('checkin_employees', JSON.stringify(empleados));
 
-        if (employeesRef) {
+        if (employeesRef && navigator.onLine) {
           employeesRef.child(emp._key || emp.id.replace(/[^a-zA-Z0-9]/g, '_')).update({
             registeredDeviceTokens: nuevosEquipos,
             registeredDeviceToken: nuevosEquipos[0]
-          });
+          }).catch(() => {});
         }
       }
 
@@ -3025,17 +3166,26 @@
         ? (emp.registeredDeviceToken || currentDeviceToken)
         : currentDeviceToken;
 
+      const ahoraLocal = obtenerHoraActualCorregida();
+      const payloadServidor = {
+        empleadoId: emp.id,
+        tipo: selectedEventType,
+        pin: pinVal,
+        deviceToken: tokenParaServidor,
+        realDeviceToken: currentDeviceToken,
+        location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 },
+        offlineTimestamp: ahoraLocal.getTime(),
+        offlineDate: ahoraLocal.toISOString().split('T')[0],
+        offlineTime: ahoraLocal.toLocaleTimeString('es-MX', { hour12: true })
+      };
+
       try {
+        if (!navigator.onLine) {
+          throw { code: 'functions/unavailable', message: 'Sin conexión a internet' };
+        }
+
         const registrarAsistenciaSegura = firebase.functions().httpsCallable('registrarAsistenciaSegura');
-        
-        const respuesta = await registrarAsistenciaSegura({
-          empleadoId: emp.id,
-          tipo: selectedEventType,
-          pin: pinVal,
-          deviceToken: tokenParaServidor,
-          realDeviceToken: currentDeviceToken,
-          location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 }
-        });
+        const respuesta = await registrarAsistenciaSegura(payloadServidor);
 
         const record = respuesta.data.record;
         let tolResult = (record && record.toleranciaStatus) || { retardo: false, minutosDelay: 0, statusLabel: 'N/A' };
@@ -3063,6 +3213,7 @@
           if (!historial.some(h => h.id === record.id && h.empId === record.empId && h.eventType === record.eventType)) {
             historial.unshift(record);
           }
+          localStorage.setItem('checkin_history', JSON.stringify(historial));
         }
 
         playSuccessSound();
@@ -3088,9 +3239,65 @@
         onSelectEmployee();
         renderHistoryTable();
         renderHoursTable();
+        sincronizarColaOffline();
       } catch (error) {
-        console.error("Error en Cloud Function:", error);
-        alert("Aviso de seguridad del servidor: " + (error.message || error));
+        const code = (error && error.code) || '';
+        const esFalloDeRed = !navigator.onLine || code === 'functions/internal' || code === 'functions/unavailable' || code === 'functions/deadline-exceeded' || /network|offline|fetch/i.test(error.message || '');
+
+        if (esFalloDeRed) {
+          const tolResult = selectedEventType === 'Entrada'
+            ? evaluarToleranciaEntrada(ahoraLocal, emp)
+            : { retardo: false, minutosDelay: 0, statusLabel: 'N/A' };
+
+          const recordOffline = {
+            id: ahoraLocal.getTime(),
+            empId: emp.id,
+            empName: emp.name,
+            empDept: emp.dept,
+            eventType: selectedEventType,
+            date: ahoraLocal.toISOString().split('T')[0],
+            time: ahoraLocal.toLocaleTimeString('es-MX', { hour12: true }),
+            location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 },
+            deviceToken: currentDeviceToken,
+            huellaVerificada: true,
+            offlinePending: true,
+            observaciones: (emp.turnoEntrada ? `Turno: ${emp.turnoNombre || emp.turnoEntrada}` : 'Registro en teléfono') + ' [Pendiente de sincronizar]',
+            toleranciaStatus: tolResult,
+            timestamp: ahoraLocal.getTime()
+          };
+
+          const cola = obtenerColaOffline();
+          cola.push({ payload: payloadServidor, record: recordOffline });
+          guardarColaOffline(cola);
+
+          if (!historial.some(h => h.id === recordOffline.id && h.empId === recordOffline.empId && h.eventType === recordOffline.eventType)) {
+            historial.unshift(recordOffline);
+          }
+          localStorage.setItem('checkin_history', JSON.stringify(historial));
+
+          playSuccessSound();
+          showToast(
+            'Guardado en tu teléfono',
+            `${selectedEventType} guardada sin datos. Se mandará sola al tener internet.`,
+            'info'
+          );
+          mostrarModalMotivacion(selectedEventType, emp);
+
+          selectedEventType = '';
+          selectedEmployeeId = '';
+          document.getElementById('employee-search-input').value = '';
+          document.getElementById('employee-pin-input').value = '';
+          document.getElementById('pin-input-container').classList.add('hidden');
+          document.querySelectorAll('.event-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-slate-700/80', 'ring-2', 'ring-blue-500/50'));
+
+          renderEmployeeSelect();
+          onSelectEmployee();
+          renderHistoryTable();
+          renderHoursTable();
+        } else {
+          console.error("Error en Cloud Function:", error);
+          alert("Aviso de seguridad del servidor: " + (error.message || error));
+        }
       } finally {
         actualizarEstadoBotonesEventos();
         checkCanSubmit();
@@ -3182,6 +3389,9 @@
         historial = historial.filter(h => h.id !== recordId);
         localStorage.setItem('checkin_history', JSON.stringify(historial));
 
+        const colaActualizada = obtenerColaOffline().filter(item => item.record && item.record.id !== recordId);
+        guardarColaOffline(colaActualizada);
+
         if (historyRef) {
           historyRef.once('value', (snap) => {
             const val = snap.val();
@@ -3253,6 +3463,10 @@
           tolBadge = `<span class="px-2 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded text-[11px] font-bold">Acceso a Sistema</span>`;
         }
 
+        const pendingBadge = item.offlinePending
+          ? `<span class="ml-1.5 px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded text-[10px] font-bold">Pendiente envío</span>`
+          : '';
+
         const hasGps = item.location && item.location.lat !== 'N/A';
         const mapsUrl = hasGps ? `https://www.google.com/maps?q=${item.location.lat},${item.location.lng}` : '#';
 
@@ -3271,7 +3485,7 @@
             <td class="p-3.5">
               <span class="px-2.5 py-1 rounded-md text-xs font-semibold border ${badgeColor}">
                 ${item.eventType}
-              </span>
+              </span>${pendingBadge}
             </td>
             <td class="p-3.5">${tolBadge}</td>
             <td class="p-3.5">${horasBadge}</td>
@@ -3869,6 +4083,7 @@
       if (confirm('¿Estás completamente seguro de borrar todo el historial de marcas en la nube? Esta acción no se puede deshacer.')) {
         historial = [];
         localStorage.removeItem('checkin_history');
+        guardarColaOffline([]);
         if (historyRef) {
           historyRef.remove();
         }
