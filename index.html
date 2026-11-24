@@ -1094,7 +1094,16 @@
             const cfgVal = snapshot.val();
             if (cfgVal) {
               if (cfgVal.name) companyName = cfgVal.name;
-              if (cfgVal.password) companyPassword = cfgVal.password;
+              if (cfgVal.password) {
+                companyPassword = cfgVal.password;
+                companyPasswordFromServer = true;
+                hashClaveEmpresa(cfgVal.password).then((h) => {
+                  if (h) {
+                    companyPasswordHashCache = h;
+                    try { localStorage.setItem('checkin_company_pass_hash', h); } catch (_) {}
+                  }
+                });
+              }
               companyLogo = cfgVal.logo || '';
               if (companyLogo) {
                 localStorage.setItem('checkin_company_logo', companyLogo);
@@ -1103,6 +1112,13 @@
               }
               if (cfgVal.officialEntryTime) officialEntryTime = cfgVal.officialEntryTime;
               if (typeof cfgVal.toleranceMinutes === 'number') toleranceMinutes = cfgVal.toleranceMinutes;
+              try {
+                localStorage.setItem('checkin_company_cfg', JSON.stringify({
+                  name: companyName,
+                  officialEntryTime: officialEntryTime,
+                  toleranceMinutes: toleranceMinutes
+                }));
+              } catch (_) {}
               actualizarTextosEmpresa();
               actualizarLogoEmpresaEnUI();
               actualizarBadgeHorario();
@@ -1276,8 +1292,24 @@
     localStorage.removeItem('checkin_admin_pin');
     
     // LOGIN DE EMPRESA, LOGO Y COLABORADOR ACTIVO
-    let companyPassword = 'empresa123';
+    let companyPassword = null; // se llena con la clave real desde Firebase
+    let companyPasswordFromServer = false;
+    let companyPasswordHashCache = localStorage.getItem('checkin_company_pass_hash') || '';
     let companyName = 'HUBERT CHECKIN PRO';
+    try {
+      const cfgGuardada = JSON.parse(localStorage.getItem('checkin_company_cfg') || 'null');
+      if (cfgGuardada) {
+        if (cfgGuardada.name) companyName = cfgGuardada.name;
+      }
+    } catch (_) {}
+
+    // Huella SHA-256 de la clave (así no se guarda la clave en texto plano en el celular)
+    async function hashClaveEmpresa(texto) {
+      if (!window.crypto || !window.crypto.subtle) return '';
+      const datos = new TextEncoder().encode('checkin-pro|' + String(texto));
+      const buf = await window.crypto.subtle.digest('SHA-256', datos);
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
     let companyLogo = localStorage.getItem('checkin_company_logo') || '';
     let isCompanyLoggedIn = false;
     let activeLoggedInEmp = null;
@@ -1285,6 +1317,11 @@
     // CONFIGURACIÓN DE HORARIO Y TOLERANCIA
     let officialEntryTime = '08:00';
     let toleranceMinutes = 15;
+    try {
+      const cfgH = JSON.parse(localStorage.getItem('checkin_company_cfg') || 'null');
+      if (cfgH && cfgH.officialEntryTime) officialEntryTime = cfgH.officialEntryTime;
+      if (cfgH && typeof cfgH.toleranceMinutes === 'number') toleranceMinutes = cfgH.toleranceMinutes;
+    } catch (_) {}
 
     let isAdminActive = false;
     let selectedEmployeeId = '';
@@ -1562,7 +1599,21 @@
       const selectedEmpId = empSelect ? empSelect.value : '';
       const ingresadoPinEmp = empPinInput ? empPinInput.value.trim() : '';
 
-      if (ingresadaEmpresa !== companyPassword) {
+      let claveCorrecta = false;
+      if (companyPasswordFromServer && companyPassword) {
+        // Con internet: se compara contra la clave vigente en la nube
+        claveCorrecta = (ingresadaEmpresa === companyPassword);
+      } else if (companyPasswordHashCache) {
+        // Sin internet: se compara contra la huella guardada en este equipo
+        const hIngresada = await hashClaveEmpresa(ingresadaEmpresa);
+        claveCorrecta = (hIngresada !== '' && hIngresada === companyPasswordHashCache);
+      } else {
+        alert('Este equipo aún no tiene guardada la clave de la empresa. Conéctate a internet una vez para activar el modo sin conexión.');
+        if (passInput) passInput.value = '';
+        return;
+      }
+
+      if (!claveCorrecta) {
         alert('Clave de acceso de la empresa incorrecta.');
         if (passInput) passInput.value = '';
         return;
@@ -1675,11 +1726,11 @@
 
       const updateObj = {
         name: companyName,
-        password: companyPassword,
         logo: companyLogo || null,
         officialEntryTime,
         toleranceMinutes
       };
+      if (companyPassword) updateObj.password = companyPassword;
 
       try {
         if (companyConfigRef) {
@@ -1717,9 +1768,9 @@
         officialEntryTime,
         toleranceMinutes,
         name: companyName,
-        password: companyPassword,
         logo: companyLogo || null
       };
+      if (companyPassword) updateObj.password = companyPassword;
 
       try {
         if (companyConfigRef) {
