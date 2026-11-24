@@ -215,7 +215,7 @@
 
       <div class="border-t border-slate-800 pt-3">
         <p class="text-[11px] text-slate-500">
-          El inicio de sesión queda asentado con fecha, hora e identidad en el reporte Excel.
+          Acceso verificado de empresa y colaborador.
         </p>
       </div>
 
@@ -297,12 +297,12 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Buscar o Seleccionar Empleado</label>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Buscar por ID o Nombre de Empleado</label>
           <!-- COMBOBOX / BUSCADOR INTERACTIVO -->
           <div class="relative" id="employee-combobox-wrapper">
             <div class="relative flex items-center">
               <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none z-10"></i>
-              <input type="text" id="employee-search-input" oninput="filterEmployeeCombobox()" onfocus="openEmployeeCombobox()" placeholder="Escribe nombre o ID..." class="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl pl-10 pr-10 py-3.5 focus:outline-none focus:border-blue-500 font-medium text-sm">
+              <input type="text" id="employee-search-input" oninput="filterEmployeeCombobox()" onfocus="openEmployeeCombobox()" placeholder="Escribe tu ID de empleado (o nombre)..." class="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl pl-10 pr-10 py-3.5 focus:outline-none focus:border-blue-500 font-medium text-sm">
               <button type="button" onclick="toggleEmployeeCombobox()" class="absolute right-3 p-1 text-slate-400 hover:text-white">
                 <i data-lucide="chevron-down" class="w-5 h-5"></i>
               </button>
@@ -466,7 +466,6 @@
             <input type="date" id="filter-date" onchange="renderHistoryTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
             <select id="filter-event-type" onchange="renderHistoryTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
               <option value="">Todos los eventos</option>
-              <option value="Login Empresa">Login Empresa</option>
               <option value="Entrada">Entrada</option>
               <option value="Salida Comer">Salida Comer</option>
               <option value="Regreso Comer">Regreso Comer</option>
@@ -1035,13 +1034,13 @@
         if (companyConfigRef) companyConfigRef.off('value');
       } catch (e) { console.warn('No se pudieron quitar escuchas previas:', e); }
 
-      // 1. Escuchar Historial de Asistencias
+      // 1. Escuchar Historial de Asistencias (omitiendo eventos de Login Empresa)
       historyRef.on('value', (snapshot) => {
         try {
           const val = snapshot.val();
-          const pendientesLocales = historial.filter(h => h && h.offlinePending);
+          const pendientesLocales = historial.filter(h => h && h.offlinePending && h.eventType !== 'Login Empresa');
           if (val) {
-            const remotos = Object.values(val);
+            const remotos = Object.values(val).filter(h => h && h.eventType !== 'Login Empresa');
             const combinados = [...remotos];
             pendientesLocales.forEach(p => {
               if (!combinados.some(r => r.id === p.id && r.empId === p.empId && r.eventType === p.eventType)) {
@@ -1302,7 +1301,7 @@
     const currentDeviceToken = obtenerDeviceToken();
 
     let empleados = JSON.parse(localStorage.getItem('checkin_employees')) || [];
-    let historial = JSON.parse(localStorage.getItem('checkin_history')) || [];
+    let historial = (JSON.parse(localStorage.getItem('checkin_history')) || []).filter(h => h && h.eventType !== 'Login Empresa');
     localStorage.removeItem('checkin_admin_pin');
     
     // LOGIN DE EMPRESA, LOGO Y COLABORADOR ACTIVO
@@ -1662,31 +1661,6 @@
       isCompanyLoggedIn = true;
       activeLoggedInEmp = empObj;
       document.getElementById('company-login-overlay').classList.add('hidden');
-
-      const horaOficialNet = obtenerHoraActualCorregida();
-      const recordKey = `login_${horaOficialNet.getTime()}`;
-      const record = {
-        id: horaOficialNet.getTime(),
-        empId: empObj.id,
-        empName: empObj.name,
-        empDept: empObj.dept,
-        eventType: 'Login Empresa',
-        date: horaOficialNet.toISOString().split('T')[0],
-        time: horaOficialNet.toLocaleTimeString('es-MX', { hour12: true }),
-        location: currentLocation ? { ...currentLocation } : { lat: 'N/A', lng: 'N/A', accuracy: 0 },
-        deviceToken: currentDeviceToken,
-        huellaVerificada: true,
-        observaciones: 'Acceso inicial a la app con clave general, PIN y autenticación de seguridad',
-        toleranciaStatus: { retardo: false, minutosDelay: 0, statusLabel: 'Acceso Permitido' },
-        timestamp: horaOficialNet.getTime()
-      };
-
-      if (historyRef && navigator.onLine) {
-        historyRef.child(recordKey).set(record).catch(() => {});
-      }
-
-      historial.unshift(record);
-      localStorage.setItem('checkin_history', JSON.stringify(historial));
 
       if (esCumpleHoy(empObj)) {
         showToast('🎂 ¡Feliz cumpleaños!', `${empObj.name}, todo el equipo te desea un día excelente.`, 'success');
@@ -2338,7 +2312,7 @@
     }
 
     // =====================================================================
-    // COMBOBOX INTERACTIVO Y RECONOCIMIENTO AUTOMÁTICO DE DISPOSITIVO
+    // COMBOBOX INTERACTIVO (FILTRO POR ID / NOMBRE AL ESCRIBIR)
     // =====================================================================
     function renderEmployeeSelect() {
       const faltaSelect = document.getElementById('falta-employee-select');
@@ -2352,15 +2326,7 @@
       if (loginEmpSelect) loginEmpSelect.innerHTML = optionsHtml;
       if (turnoEmpSelect) turnoEmpSelect.innerHTML = optionsHtml;
 
-      const matchedDeviceEmp = empleados.find(e => obtenerEquiposAutorizados(e).includes(currentDeviceToken));
-      if (matchedDeviceEmp && !selectedEmployeeId) {
-        selectedEmployeeId = matchedDeviceEmp.id;
-        const searchInput = document.getElementById('employee-search-input');
-        if (searchInput) searchInput.value = `${matchedDeviceEmp.name} (${matchedDeviceEmp.id})`;
-        onSelectEmployee();
-      } else {
-        renderEmployeeComboboxList();
-      }
+      renderEmployeeComboboxList(document.getElementById('employee-search-input')?.value || '');
     }
 
     function renderEmployeeComboboxList(filterText = '') {
@@ -2368,12 +2334,19 @@
       if (!dropdown) return;
 
       const term = filterText.toLowerCase().trim();
+      if (!term) {
+        dropdown.innerHTML = `<div class="p-4 text-center text-xs text-slate-400 italic">Escribe tu ID de empleado para buscar...</div>`;
+        return;
+      }
+
       const filtered = empleados.filter(e => 
-        e.name.toLowerCase().includes(term) || e.id.toLowerCase().includes(term) || e.dept.toLowerCase().includes(term)
+        String(e.id || '').toLowerCase().includes(term) ||
+        String(e.name || '').toLowerCase().includes(term) ||
+        String(e.dept || '').toLowerCase().includes(term)
       );
 
       if (filtered.length === 0) {
-        dropdown.innerHTML = `<div class="p-4 text-center text-xs text-slate-500 italic">No se encontraron colaboradores</div>`;
+        dropdown.innerHTML = `<div class="p-4 text-center text-xs text-slate-500 italic">No se encontraron colaboradores con ese ID</div>`;
         return;
       }
 
@@ -2385,11 +2358,11 @@
           <div onclick="selectEmployeeFromCombobox('${emp.id}')" class="p-3 hover:bg-slate-800/80 cursor-pointer transition flex items-center justify-between ${isSelected ? 'bg-blue-600/20 border-l-4 border-blue-500' : ''}">
             <div>
               <p class="font-medium text-xs text-white flex items-center gap-1.5">
-                ${emp.name}
+                <span class="font-mono text-amber-300 font-bold">${emp.id}</span> · ${emp.name}
                 ${emp.isAdmin ? '<span class="px-1.5 py-0.2 bg-amber-500/20 text-amber-300 text-[10px] font-semibold border border-amber-500/30 rounded">Admin</span>' : ''}
                 ${isDeviceOwner ? '<span class="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold border border-emerald-500/30 rounded">Tu Equipo</span>' : ''}
               </p>
-              <p class="text-[11px] text-slate-400">ID: ${emp.id} | ${emp.dept}</p>
+              <p class="text-[11px] text-slate-400">${emp.dept}</p>
             </div>
             ${isSelected ? '<i data-lucide="check" class="w-4 h-4 text-blue-400"></i>' : ''}
           </div>
@@ -2422,6 +2395,14 @@
     }
 
     function filterEmployeeCombobox() {
+      const inputVal = document.getElementById('employee-search-input')?.value || '';
+      if (selectedEmployeeId) {
+        const empActual = empleados.find(e => e.id === selectedEmployeeId);
+        if (!empActual || inputVal !== `${empActual.name} (${empActual.id})`) {
+          selectedEmployeeId = '';
+          onSelectEmployee();
+        }
+      }
       openEmployeeCombobox();
     }
 
@@ -2781,7 +2762,7 @@
 
     function calcularHorasTrabajadasPorDia(empId, fechaStr) {
       const marcasDelDia = historial
-        .filter(item => item.empId === empId && item.date === fechaStr && item.eventType !== 'Login Empresa')
+        .filter(item => item.empId === empId && item.date === fechaStr && SECUENCIA_JORNADA.includes(item.eventType))
         .sort((a, b) => a.timestamp - b.timestamp);
 
       if (marcasDelDia.length === 0) return 0;
@@ -3421,6 +3402,7 @@
       const filterType = document.getElementById('filter-event-type')?.value || '';
 
       const filtered = historial.filter(item => {
+        if (!item || item.eventType === 'Login Empresa') return false;
         const matchesName = (item.empName || '').toLowerCase().includes(search) || (item.empId || '').toLowerCase().includes(search);
         const matchesDate = filterDate ? item.date === filterDate : true;
         const matchesType = filterType ? item.eventType === filterType : true;
@@ -3437,7 +3419,6 @@
 
       tbody.innerHTML = visibles.map(item => {
         let badgeColor = 'bg-blue-500/20 text-blue-300 border-blue-500/30';
-        if (item.eventType === 'Login Empresa') badgeColor = 'bg-purple-500/20 text-purple-300 border-purple-500/30 font-bold';
         if (item.eventType === 'Entrada') badgeColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
         if (item.eventType === 'Salida Comer') badgeColor = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
         if (item.eventType === 'Salida') badgeColor = 'bg-rose-500/20 text-rose-300 border-rose-500/30';
@@ -3459,8 +3440,6 @@
           tolBadge = `<span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 rounded text-[11px] font-bold">${item.eventType.toUpperCase()}</span>`;
         } else if (item.eventType && item.eventType.includes('Falta')) {
           tolBadge = `<span class="px-2 py-0.5 bg-red-950/80 text-red-400 border border-red-600 rounded text-[11px] font-bold">FALTA REGISTRADA</span>`;
-        } else if (item.eventType === 'Login Empresa') {
-          tolBadge = `<span class="px-2 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded text-[11px] font-bold">Acceso a Sistema</span>`;
         }
 
         const pendingBadge = item.offlinePending
@@ -3580,15 +3559,16 @@
     }
 
     function exportToExcel() {
-      if (historial.length === 0 && empleados.length === 0) {
+      const historialExportable = historial.filter(item => item && item.eventType !== 'Login Empresa');
+      if (historialExportable.length === 0 && empleados.length === 0) {
         alert('No hay información registrada para exportar.');
         return;
       }
 
       const workbook = XLSX.utils.book_new();
 
-      if (historial.length > 0) {
-        const historyExcelData = historial.map(item => {
+      if (historialExportable.length > 0) {
+        const historyExcelData = historialExportable.map(item => {
           const hasGps = item.location && item.location.lat !== 'N/A';
           const msCalculadosDia = (item.eventType === 'Salida') ? calcularHorasTrabajadasPorDia(item.empId, item.date) : 0;
           const resumenHoras = calcularResumenHorasEmpleado(item.empId);
