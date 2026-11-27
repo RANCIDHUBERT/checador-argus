@@ -1305,7 +1305,7 @@
     localStorage.removeItem('checkin_admin_pin');
     
     // LOGIN DE EMPRESA, LOGO Y COLABORADOR ACTIVO
-    let companyPassword = null; // se llena con la clave real desde Firebase
+    let companyPassword = null;
     let companyPasswordFromServer = false;
     let companyPasswordHashCache = localStorage.getItem('checkin_company_pass_hash') || '';
     let companyName = 'HUBERT CHECKIN PRO';
@@ -1316,7 +1316,6 @@
       }
     } catch (_) {}
 
-    // Huella SHA-256 de la clave (así no se guarda la clave en texto plano en el celular)
     async function hashClaveEmpresa(texto) {
       if (!window.crypto || !window.crypto.subtle) return '';
       const datos = new TextEncoder().encode('checkin-pro|' + String(texto));
@@ -1617,10 +1616,8 @@
 
       let claveCorrecta = false;
       if (companyPasswordFromServer && companyPassword) {
-        // Con internet: se compara contra la clave vigente en la nube
         claveCorrecta = (ingresadaEmpresa === companyPassword);
       } else if (companyPasswordHashCache) {
-        // Sin internet: se compara contra la huella guardada en este equipo
         const hIngresada = await hashClaveEmpresa(ingresadaEmpresa);
         claveCorrecta = (hIngresada !== '' && hIngresada === companyPasswordHashCache);
       } else {
@@ -1900,7 +1897,7 @@
         gain2.gain.setValueAtTime(0.25, audioCtx.currentTime + 0.12);
         gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
         osc2.connect(gain2);
-        osc2.connect(audioCtx.destination);
+        gain2.connect(audioCtx.destination);
         osc2.start(audioCtx.currentTime + 0.12);
         osc2.stop(audioCtx.currentTime + 0.35);
       } catch (err) {
@@ -3054,7 +3051,6 @@
         return;
       }
 
-      // 1. Verificar que no se repita un evento ya registrado hoy ni un paso anterior
       const motivoBloqueo = validarEventoPermitidoHoy(emp.id, selectedEventType);
       if (motivoBloqueo) {
         showToast('Registro bloqueado', motivoBloqueo, 'error');
@@ -3072,7 +3068,6 @@
         return;
       }
 
-      // 2. Verificar autorización de dispositivo (hasta 2 equipos: laptop + celular, o libre para Admin)
       const equiposActuales = obtenerEquiposAutorizados(emp);
       const yaAutorizado = equiposActuales.includes(currentDeviceToken);
 
@@ -3128,7 +3123,6 @@
         }
       }
 
-      // Registrar este equipo si aún no estaba en la lista (hasta 2 dispositivos, o ilimitado para admin)
       if (!yaAutorizado && (emp.isAdmin || equiposActuales.length < MAX_EQUIPOS_POR_USUARIO)) {
         const nuevosEquipos = [...equiposActuales, currentDeviceToken];
         emp.registeredDeviceTokens = nuevosEquipos;
@@ -4094,8 +4088,8 @@
       }
 
       toast.classList.remove('translate-x-full', 'opacity-0');
-      
-|
+
+      setTimeout(() => {
         toast.classList.add('translate-x-full', 'opacity-0');
       }, 3500);
     }
