@@ -4100,15 +4100,5 @@
       }, 3500);
     }
   </script>
-<script>
-  // Registrar el Service Worker para que la web abra y funcione sin datos
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(() => console.log('Modo Offline Web activado correctamente'))
-        .catch((err) => console.warn('Error al activar Modo Offline:', err));
-    });
-  }
-</script>
 </body>
 </html>
